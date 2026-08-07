@@ -138,12 +138,88 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* ── Admin Accounts Table ──────────────────────────────────────── */}
+      <div className="bg-white rounded-xl shadow-sm border border-[#DDD0F0] overflow-hidden mb-6">
+        <div className="px-5 py-4 border-b border-[#DDD0F0] flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-bold text-[#1A0A2E]">Admin Account Details</h2>
+            <p className="text-xs text-[#7A6A8A]">Owners, cashiers &amp; cutters managed by each Admin</p>
+          </div>
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-100 text-purple-700">
+            {stats?.adminsBreakdown?.length ?? 0} Admins
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-[#F0EAF8] text-[#3A2A4A] font-semibold text-xs uppercase tracking-wider">
+              <tr>
+                <th className="px-5 py-3">Admin Name</th>
+                <th className="px-5 py-3">Phone</th>
+                <th className="px-5 py-3 text-center">Owners</th>
+                <th className="px-5 py-3 text-center">Manufacturers</th>
+                <th className="px-5 py-3 text-center">Resellers</th>
+                <th className="px-5 py-3 text-center">Cashiers</th>
+                <th className="px-5 py-3 text-center">Cutters</th>
+                <th className="px-5 py-3 text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr><td colSpan={8} className="text-center py-8 text-gray-400">Loading admin details…</td></tr>
+              ) : !stats?.adminsBreakdown || stats.adminsBreakdown.length === 0 ? (
+                <tr><td colSpan={8} className="text-center py-8 text-gray-400">No admin accounts created yet</td></tr>
+              ) : (
+                stats.adminsBreakdown.map((admin) => (
+                  <tr key={admin.id} className="hover:bg-purple-50/50 transition-colors">
+                    <td className="px-5 py-3.5 font-medium text-gray-900">{admin.name}</td>
+                    <td className="px-5 py-3.5 text-gray-600 font-mono text-xs">{admin.phone}</td>
+                    <td className="px-5 py-3.5 text-center">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-violet-50 text-violet-700 border border-violet-200">
+                        {admin.owner_count} Owner{admin.owner_count !== 1 ? 's' : ''}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-center">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                        {admin.manufacturer_count}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-center">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        {admin.reseller_count}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-center">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {admin.cashier_count} Cashier{admin.cashier_count !== 1 ? 's' : ''}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-center">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        {admin.cutter_count} Cutter{admin.cutter_count !== 1 ? 's' : ''}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right">
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                        admin.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {admin.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Owners Breakdown Table */}
       <div className="bg-white rounded-xl shadow-sm border border-[#DDD0F0] overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-[#DDD0F0] flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-[#1A0A2E]">Owner Account Details</h2>
-            <p className="text-xs text-[#7A6A8A]">Total cashiers & cutters assigned to each Manufacturer / Reseller owner</p>
+            <p className="text-xs text-[#7A6A8A]">Total cashiers &amp; cutters assigned to each Manufacturer / Reseller owner</p>
           </div>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-100 text-purple-700">
             {stats?.ownersBreakdown?.length ?? 0} Owners
