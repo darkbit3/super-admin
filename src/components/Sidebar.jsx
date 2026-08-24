@@ -93,8 +93,8 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 flex-shrink-0" style={{ backgroundColor: DARK, minHeight: '100vh' }}>
+      {/* Desktop sidebar — sticky, never scrolls with page */}
+      <aside className="hidden lg:flex flex-col w-64 flex-shrink-0" style={{ backgroundColor: DARK, height: '100vh', position: 'sticky', top: 0 }}>
         <SidebarContent onNavClick={() => {}} onLogout={handleLogout} />
       </aside>
 

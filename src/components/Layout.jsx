@@ -2,9 +2,10 @@ import Sidebar from './Sidebar'
 
 export default function Layout({ children }) {
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: '#F0EAF8' }}>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F0EAF8' }}>
       <Sidebar />
-      <main className="flex-1 overflow-auto" style={{ paddingTop: 'var(--top-bar-h, 56px)' }}>
+      {/* Only main scrolls — sidebar stays fixed */}
+      <main className="flex-1 overflow-y-auto" style={{ paddingTop: 'var(--top-bar-h, 56px)' }}>
         <style>{`
           @media (min-width: 1024px) {
             main { padding-top: 0 !important; padding-bottom: 0 !important; }

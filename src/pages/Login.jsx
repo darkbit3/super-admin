@@ -6,8 +6,8 @@ import { authApi } from '../api/authApi'
 const ACCENT = '#7C3AED'
 
 export default function Login() {
-  const [username, setUsername]         = useState('yonas')
-  const [password, setPassword]         = useState('Kale@1513')
+  const [username, setUsername]         = useState('')
+  const [password, setPassword]         = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError]               = useState('')
   const [loading, setLoading]           = useState(false)
@@ -83,10 +83,10 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Username / Phone */}
               <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: '#3A2A4A' }}>Username or Phone</label>
+                <label htmlFor="super-admin-username" className="block text-sm font-medium mb-1.5" style={{ color: '#3A2A4A' }}>Username or Phone</label>
                 <div className="flex items-center border rounded-lg overflow-hidden" style={{ borderColor: '#DDD0F0' }}>
                   <input
-                    type="text" value={username} onChange={e => setUsername(e.target.value)}
+                    id="super-admin-username" type="text" value={username} onChange={e => setUsername(e.target.value)}
                     placeholder="Enter username (e.g. yonas) or phone" required
                     className="flex-1 px-4 py-2.5 text-sm outline-none bg-white" style={{ color: '#1A0A2E' }}
                   />
@@ -95,10 +95,10 @@ export default function Login() {
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: '#3A2A4A' }}>Password</label>
+                <label htmlFor="super-admin-password" className="block text-sm font-medium mb-1.5" style={{ color: '#3A2A4A' }}>Password</label>
                 <div className="flex items-center border rounded-lg overflow-hidden" style={{ borderColor: '#DDD0F0' }}>
                   <input
-                    type={showPassword ? 'text' : 'password'} value={password}
+                    id="super-admin-password" type={showPassword ? 'text' : 'password'} value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••" required
                     className="flex-1 px-4 py-2.5 text-sm outline-none bg-white" style={{ color: '#1A0A2E' }}

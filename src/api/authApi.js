@@ -2,7 +2,7 @@ import { api, setTokens, clearTokens } from './client'
 
 export const authApi = {
   async login(phone, password) {
-    const res = await api.post('/super-auth/login', { phone, password })
+    const res = await api.post('/super-auth/login', { phone, password }, { refreshOnUnauthorized: false })
     if (!res?.data?.accessToken) {
       throw new Error('Invalid response from server. Please try again.')
     }

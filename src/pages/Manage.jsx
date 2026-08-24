@@ -4,17 +4,6 @@ import { manageApi } from '../api/manageApi'
 import { useToast } from '../context/ToastContext'
 
 // ── Icons ──────────────────────────────────────────────────────────────────
-const EyeOn = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-  </svg>
-)
-const EyeOff = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-  </svg>
-)
 const IconAdd = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -59,6 +48,14 @@ function fmtDate(iso) {
   if (!iso) return '—'
   try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }
   catch { return iso }
+}
+
+function getFieldErrors(error) {
+  const fieldErrors = {}
+  if (Array.isArray(error.errors)) {
+    error.errors.forEach(({ field, message }) => { fieldErrors[field] = message })
+  }
+  return fieldErrors
 }
 
 // ── Modal wrapper ──────────────────────────────────────────────────────────
@@ -173,9 +170,6 @@ export default function Manage() {
   const [loading, setLoading]         = useState(true)
   const [apiError, setApiError]       = useState('')
   const [selected, setSelected]       = useState([])
-  const [visiblePwd, setVisiblePwd]   = useState({})
-  const [revealedPwd, setRevealedPwd] = useState({})
-
   const [showAddModal,   setShowAddModal]   = useState(false)
   const [showEditModal,  setShowEditModal]  = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
@@ -188,6 +182,7 @@ export default function Manage() {
   const [showAddConfirm, setShowAddConfirm] = useState(false)
 
   const [editForm,   setEditForm]   = useState(emptyEditForm)
+  const [editErrors, setEditErrors] = useState({})
   const [editTarget, setEditTarget] = useState(null)
 
   const [resetTargetIds,   setResetTargetIds]   = useState([])
@@ -201,7 +196,7 @@ export default function Manage() {
     setLoading(true); setApiError('')
     try {
       const data = await manageApi.getAll()
-      setAdmins(data); setRevealedPwd({}); setVisiblePwd({})
+      setAdmins(data)
     } catch (err) {
       setApiError(err.message || 'Failed to load admins')
       toast.error(err.message || 'Failed to load admins')
@@ -236,7 +231,12 @@ export default function Manage() {
       await manageApi.create({ ...rest, phone: '0' + addForm.phone })
       await fetchAdmins(); setShowAddModal(false)
       toast.success('Admin created successfully')
-    } catch (err) { setAddErrors({ phone: err.message }) }
+    } catch (err) {
+      const fieldErrors = getFieldErrors(err)
+      if (err.status === 409) fieldErrors.phone = err.message
+      if (Object.keys(fieldErrors).length > 0) setAddErrors(fieldErrors)
+      else toast.error(err.message)
+    }
   }
 
   // ── Edit ─────────────────────────────────────────────────────────────────
@@ -247,6 +247,7 @@ export default function Manage() {
     setEditTarget(admin)
     const stripped = admin.phone.startsWith('0') ? admin.phone.slice(1) : admin.phone
     setEditForm({ name: admin.name, phone: stripped })
+    setEditErrors({})
     setShowEditModal(true)
   }
   const handleEdit = async () => {
@@ -255,7 +256,12 @@ export default function Manage() {
       await manageApi.update(editTarget.id, { name: editForm.name, phone: '0' + editForm.phone })
       await fetchAdmins(); setShowEditModal(false)
       toast.success('Admin updated successfully')
-    } catch (err) { toast.error(err.message) }
+    } catch (err) {
+      const fieldErrors = getFieldErrors(err)
+      if (err.status === 409) fieldErrors.phone = err.message
+      if (Object.keys(fieldErrors).length > 0) setEditErrors(fieldErrors)
+      else toast.error(err.message)
+    }
   }
 
   // ── Delete ───────────────────────────────────────────────────────────────
@@ -287,7 +293,11 @@ export default function Manage() {
       await manageApi.updateStatus(admin.id, newStatus)
       await fetchAdmins()
       toast.success(`${admin.name} set to ${newStatus}`)
-    } catch (err) { toast.error(err.message) }
+    } catch (err) {
+      const fieldErrors = getFieldErrors(err)
+      if (Object.keys(fieldErrors).length > 0) setResetErrors(fieldErrors)
+      else toast.error(err.message)
+    }
   }
   const handleToggleSelected = async () => {
     if (selCount === 0) return
@@ -318,17 +328,6 @@ export default function Manage() {
       await fetchAdmins(); setShowResetModal(false); setSelected([])
       toast.success(`Password reset for ${resetTargetIds.length} admin(s)`)
     } catch (err) { toast.error(err.message) }
-  }
-
-  // ── Password reveal ──────────────────────────────────────────────────────
-  const toggleRowPwd = async (id) => {
-    if (visiblePwd[id]) { setVisiblePwd(v => ({ ...v, [id]: false })); return }
-    if (revealedPwd[id]) { setVisiblePwd(v => ({ ...v, [id]: true })); return }
-    try {
-      const pwd = await manageApi.getPassword(id)
-      setRevealedPwd(v => ({ ...v, [id]: pwd }))
-      setVisiblePwd(v => ({ ...v, [id]: true }))
-    } catch { /* fail silently */ }
   }
 
   return (
@@ -412,15 +411,6 @@ export default function Manage() {
                     <p className="text-xs mt-0.5" style={{ color: '#A090B0' }}>Joined {fmtDate(admin.created_at)}</p>
                   </div>
                 </div>
-                <div className="mt-2 ml-8 flex items-center gap-2">
-                  <span className="text-xs font-mono tracking-widest" style={{ color: '#7A6A8A' }}>
-                    {visiblePwd[admin.id] ? (revealedPwd[admin.id] || '…') : '••••••••'}
-                  </span>
-                  <button type="button" onClick={() => toggleRowPwd(admin.id)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors p-1 flex items-center justify-center">
-                    {visiblePwd[admin.id] ? <EyeOff /> : <EyeOn />}
-                  </button>
-                </div>
                 <div className="mt-3 ml-8 flex items-center gap-2">
                   <button onClick={() => openEdit(admin.id)} className="flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors" title="Edit"><IconEdit /></button>
                   <button onClick={() => openDelete([admin.id])} className="flex items-center justify-center w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors" title="Delete"><IconDelete /></button>
@@ -477,7 +467,6 @@ export default function Manage() {
               </th>
               <th className="text-left px-4 py-3 font-semibold text-gray-600">Name</th>
               <th className="text-left px-4 py-3 font-semibold text-gray-600">Phone</th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">Password</th>
               <th className="text-left px-4 py-3 font-semibold text-gray-600">Status</th>
               <th className="text-left px-4 py-3 font-semibold text-gray-600">Joined</th>
               <th className="text-left px-4 py-3 font-semibold text-gray-600">Actions</th>
@@ -485,9 +474,9 @@ export default function Manage() {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {loading ? (
-              <tr><td colSpan={7} className="text-center py-10 text-gray-400">Loading…</td></tr>
+              <tr><td colSpan={6} className="text-center py-10 text-gray-400">Loading…</td></tr>
             ) : admins.length === 0 ? (
-              <tr><td colSpan={7} className="text-center py-10 text-gray-400">No admins found</td></tr>
+              <tr><td colSpan={6} className="text-center py-10 text-gray-400">No admins found</td></tr>
             ) : (
               admins.map(admin => {
                 const isSelected = selected.includes(admin.id)
@@ -500,17 +489,6 @@ export default function Manage() {
                     </td>
                     <td className="px-4 py-4 font-medium text-gray-800">{admin.name}</td>
                     <td className="px-4 py-4 text-gray-500">{admin.phone}</td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-gray-500 font-mono text-xs tracking-widest">
-                          {visiblePwd[admin.id] ? (revealedPwd[admin.id] || '…') : '••••••••'}
-                        </span>
-                        <button type="button" onClick={e => { e.stopPropagation(); toggleRowPwd(admin.id) }}
-                          className="text-gray-400 hover:text-gray-600 transition-colors">
-                          {visiblePwd[admin.id] ? <EyeOff /> : <EyeOn />}
-                        </button>
-                      </div>
-                    </td>
                     <td className="px-4 py-4"><StatusBadge status={admin.status} /></td>
                     <td className="px-4 py-4 text-gray-400 text-xs">{fmtDate(admin.created_at)}</td>
                     <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
@@ -592,11 +570,12 @@ export default function Manage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
                 <input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm outline-none min-h-[44px]" />
+                  className={`w-full border rounded-xl px-3 py-3 text-sm outline-none min-h-[44px] ${editErrors.name ? 'border-red-400' : 'border-gray-300'}`} />
+                {editErrors.name && <p className="text-xs text-red-500 mt-1">{editErrors.name}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
-                <PhoneInput value={editForm.phone} onChange={v => setEditForm(f => ({ ...f, phone: v }))} />
+                <PhoneInput value={editForm.phone} onChange={v => setEditForm(f => ({ ...f, phone: v }))} error={editErrors.phone} />
               </div>
             </div>
             <div className="px-5 pb-5 pt-3 flex gap-3 border-t border-gray-100">

@@ -36,7 +36,7 @@ async function refreshAccessToken() {
   return data.data.accessToken
 }
 
-async function request(path, options = {}, retry = true) {
+async function request(path, options = {}, retry = true, refreshOnUnauthorized = true) {
   const token = getAccessToken()
 
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -49,10 +49,10 @@ async function request(path, options = {}, retry = true) {
   })
 
   // Token expired — try silent refresh once
-  if (res.status === 401 && retry) {
+  if (res.status === 401 && retry && refreshOnUnauthorized) {
     try {
       await refreshAccessToken()
-      return request(path, options, false)
+      return request(path, options, false, refreshOnUnauthorized)
     } catch {
       clearTokens()
       window.location.replace('/')
@@ -74,9 +74,9 @@ async function request(path, options = {}, retry = true) {
 }
 
 export const api = {
-  get:    (path)       => request(path, { method: 'GET' }),
-  post:   (path, body) => request(path, { method: 'POST',   body: JSON.stringify(body) }),
-  put:    (path, body) => request(path, { method: 'PUT',    body: JSON.stringify(body) }),
-  patch:  (path, body) => request(path, { method: 'PATCH',  body: JSON.stringify(body) }),
-  delete: (path)       => request(path, { method: 'DELETE' }),
+  get:    (path, options)       => request(path, { method: 'GET' }, true, options?.refreshOnUnauthorized !== false),
+  post:   (path, body, options) => request(path, { method: 'POST', body: JSON.stringify(body) }, true, options?.refreshOnUnauthorized !== false),
+  put:    (path, body, options) => request(path, { method: 'PUT', body: JSON.stringify(body) }, true, options?.refreshOnUnauthorized !== false),
+  patch:  (path, body, options) => request(path, { method: 'PATCH', body: JSON.stringify(body) }, true, options?.refreshOnUnauthorized !== false),
+  delete: (path, options)       => request(path, { method: 'DELETE' }, true, options?.refreshOnUnauthorized !== false),
 }

@@ -7,7 +7,6 @@ export const manageApi = {
   // Single operations
   getAll:        ()             => api.get('/super/admins').then(r => r.data),
   getOne:        (id)           => api.get(`/super/admins/${id}`).then(r => r.data),
-  getPassword:   (id)           => api.get(`/super/admins/${id}/password`).then(r => r.data.password),
   create:        (body)         => api.post('/super/admins', body).then(r => r.data),
   update:        (id, body)     => api.put(`/super/admins/${id}`, body).then(r => r.data),
   delete:        (id)           => api.delete(`/super/admins/${id}`),
