@@ -9,6 +9,6 @@ export default defineConfig({
   },
   preview: {
     port: 4174,
-    allowedHosts: ['localhost'],
+    allowedHosts: ['localhost', 'super-admin-y9sz.onrender.com'],
   },
 })
