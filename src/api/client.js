@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://yonas-backend.onrender.com/api'
 
 function getAccessToken() {
   return localStorage.getItem('sa_access_token')

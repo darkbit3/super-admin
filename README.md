@@ -24,7 +24,7 @@ npm start
 3. Configure the frontend API URL in `super-admin/.env`:
 
 ```text
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=https://yonas-backend.onrender.com/api
 ```
 
 4. Start the frontend:
