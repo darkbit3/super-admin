@@ -17,7 +17,7 @@ describe('super-admin management API', () => {
 
     await manageApi.create({ name: 'New Admin', phone: '0900000003', password: 'password' })
 
-    expect(fetchSpy).toHaveBeenCalledWith('https://yonas-backend.onrender.com/api/super/admins', expect.objectContaining({
+    expect(fetchSpy).toHaveBeenCalledWith('https://backend-1-khts.onrender.com/api/super/admins', expect.objectContaining({
       method: 'POST',
       body: JSON.stringify({ name: 'New Admin', phone: '0900000003', password: 'password' }),
     }))
@@ -30,7 +30,7 @@ describe('super-admin management API', () => {
 
     await manageApi.bulkStatus(['admin-1', 'admin-2'], 'Inactive')
 
-    expect(fetchSpy).toHaveBeenCalledWith('https://yonas-backend.onrender.com/api/super/admins/bulk/status', expect.objectContaining({
+    expect(fetchSpy).toHaveBeenCalledWith('https://backend-1-khts.onrender.com/api/super/admins/bulk/status', expect.objectContaining({
       method: 'POST',
       body: JSON.stringify({ ids: ['admin-1', 'admin-2'], status: 'Inactive' }),
     }))

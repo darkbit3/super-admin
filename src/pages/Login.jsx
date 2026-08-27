@@ -14,7 +14,7 @@ export default function Login() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const BASE_URL = import.meta.env.VITE_API_URL || 'https://yonas-backend.onrender.com/api'
+    const BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-1-khts.onrender.com/api'
     fetch(`${BASE_URL.replace(/\/api$/, '')}/health`).catch(() => {})
   }, [])
 
