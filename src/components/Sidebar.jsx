@@ -107,9 +107,9 @@ export default function Sidebar() {
           <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0" style={{ backgroundColor: ACCENT }}>
             <img src="/logo.png" alt="Shmeta" className="w-full h-full object-cover" onError={e => { e.target.style.display='none' }} />
           </div>
-          <div>
+          <div className="min-w-0">
             <span className="text-sm font-bold" style={{ color: '#F0EAF8', fontFamily: 'Georgia, serif' }}>Shmeta</span>
-            <span className="ml-2 text-xs font-semibold" style={{ color: ACCENT }}>Super Admin</span>
+            <span className="ml-2 text-[10px] font-semibold uppercase tracking-wide" style={{ color: ACCENT }}>Super Admin</span>
           </div>
         </div>
         <button onClick={handleLogout} aria-label="Logout" className="flex items-center justify-center w-11 h-11 rounded-xl transition-colors" style={{ color: '#C4B5D4' }}>

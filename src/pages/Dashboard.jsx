@@ -114,19 +114,19 @@ export default function Dashboard() {
       )}
 
       {/* Stats grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 mb-6">
         {cardDefs.map((card) => (
           <div
             key={card.key}
-            className="bg-white rounded-xl p-4 flex flex-col gap-2"
+            className="bg-white rounded-xl p-3 sm:p-4 flex flex-col gap-2 min-w-0"
             style={{ border: '1px solid #DDD0F0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
           >
             <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(124,58,237,0.12)', color: ACCENT }}>
               {card.icon}
             </div>
             <div>
-              <p className="text-xs font-medium" style={{ color: '#7A6A8A' }}>{card.label}</p>
-              <p className="text-2xl font-bold mt-0.5" style={{ color: '#1A0A2E' }}>
+              <p className="text-[11px] sm:text-xs font-medium leading-tight" style={{ color: '#7A6A8A' }}>{card.label}</p>
+              <p className="text-xl sm:text-2xl font-bold mt-0.5" style={{ color: '#1A0A2E' }}>
                 {loading ? (
                   <span className="inline-block w-10 h-6 rounded animate-pulse align-middle" style={{ backgroundColor: '#DDD0F0' }} />
                 ) : (
@@ -138,8 +138,42 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* ── Mobile account summaries ──────────────────────────────────── */}
+      <div className="lg:hidden space-y-4 mb-6">
+        <div className="bg-white rounded-2xl border border-[#DDD0F0] overflow-hidden">
+          <div className="px-4 py-4 border-b border-[#EEE7F6] flex items-center justify-between">
+            <div><h2 className="text-sm font-bold text-[#1A0A2E]">Admin accounts</h2><p className="text-xs text-[#7A6A8A] mt-0.5">Team ownership at a glance</p></div>
+            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-purple-100 text-purple-700">{stats?.adminsBreakdown?.length ?? 0}</span>
+          </div>
+          <div className="divide-y divide-[#F1ECF7]">
+            {loading ? <div className="p-5 text-sm text-gray-400">Loading details…</div> : !stats?.adminsBreakdown?.length ? <div className="p-5 text-sm text-gray-400">No admin accounts yet</div> : stats.adminsBreakdown.map(admin => (
+              <div key={admin.id} className="p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-violet-100 text-violet-700 font-bold shrink-0">{admin.name?.charAt(0)?.toUpperCase() || '?'}</div>
+                <div className="min-w-0 flex-1"><p className="text-sm font-semibold text-[#1A0A2E] truncate">{admin.name}</p><p className="text-xs text-[#7A6A8A] mt-0.5">{admin.owner_count} owners · {admin.cashier_count} cashiers · {admin.cutter_count} cutters</p></div>
+                <span className={`shrink-0 text-[10px] font-bold px-2 py-1 rounded-full ${admin.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{admin.status}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl border border-[#DDD0F0] overflow-hidden">
+          <div className="px-4 py-4 border-b border-[#EEE7F6] flex items-center justify-between">
+            <div><h2 className="text-sm font-bold text-[#1A0A2E]">Owner accounts</h2><p className="text-xs text-[#7A6A8A] mt-0.5">Assigned team members</p></div>
+            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-purple-100 text-purple-700">{stats?.ownersBreakdown?.length ?? 0}</span>
+          </div>
+          <div className="divide-y divide-[#F1ECF7]">
+            {loading ? <div className="p-5 text-sm text-gray-400">Loading details…</div> : !stats?.ownersBreakdown?.length ? <div className="p-5 text-sm text-gray-400">No owner accounts yet</div> : stats.ownersBreakdown.map(owner => (
+              <div key={owner.id} className="p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-100 text-blue-700 font-bold shrink-0">{owner.name?.charAt(0)?.toUpperCase() || '?'}</div>
+                <div className="min-w-0 flex-1"><p className="text-sm font-semibold text-[#1A0A2E] truncate">{owner.name}</p><p className="text-xs text-[#7A6A8A] mt-0.5">{owner.role} · {owner.cashier_count} cashiers · {owner.cutter_count} cutters</p></div>
+                <span className={`shrink-0 text-[10px] font-bold px-2 py-1 rounded-full ${owner.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{owner.status}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* ── Admin Accounts Table ──────────────────────────────────────── */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#DDD0F0] overflow-hidden mb-6">
+      <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-[#DDD0F0] overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-[#DDD0F0] flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-[#1A0A2E]">Admin Account Details</h2>
@@ -215,7 +249,7 @@ export default function Dashboard() {
       </div>
 
       {/* Owners Breakdown Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#DDD0F0] overflow-hidden mb-6">
+      <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-[#DDD0F0] overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-[#DDD0F0] flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-[#1A0A2E]">Owner Account Details</h2>
