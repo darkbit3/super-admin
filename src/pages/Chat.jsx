@@ -52,15 +52,56 @@ function RoleBadge({ role }) {
   )
 }
 
-// ── Create Group Modal (placeholder — logic to be added) ───────────────────
-function CreateGroupModal({ onClose }) {
+// ── Create Group Modal ─────────────────────────────────────────────────────
+function CreateGroupModal({ people, onClose, onCreate }) {
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [selectedMemberIds, setSelectedMemberIds] = useState([])
+  const [submitting, setSubmitting] = useState(false)
+
+  const selectablePeople = (people || []).filter(person => !person.isSuperAdmin && person.id)
+
+  const toggleMember = (personId) => {
+    setSelectedMemberIds(prev =>
+      prev.includes(personId)
+        ? prev.filter(id => id !== personId)
+        : [...prev, personId]
+    )
+  }
+
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      alert('Group name is required')
+      return
+    }
+    if (selectedMemberIds.length === 0) {
+      alert('Select at least one member for the group')
+      return
+    }
+
+    try {
+      setSubmitting(true)
+      const res = await api.post('/chat/groups', {
+        name: name.trim(),
+        description: description.trim(),
+        memberIds: selectedMemberIds,
+      })
+      onCreate?.(res?.data || null)
+      onClose()
+    } catch (err) {
+      console.error('Failed to create group', err)
+      alert(err?.message || 'Unable to create the group right now.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-md rounded-2xl overflow-hidden shadow-2xl"
+      <div className="w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl"
         style={{ backgroundColor: '#fff', border: `1px solid ${ACCENT_BORDER}` }}>
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b"
           style={{ borderColor: ACCENT_BORDER, backgroundColor: PANEL_BG }}>
           <div className="flex items-center gap-3">
@@ -72,7 +113,7 @@ function CreateGroupModal({ onClose }) {
             </div>
             <div>
               <h3 className="text-base font-bold" style={{ color: DARK }}>Create Group</h3>
-              <p className="text-xs" style={{ color: TEXT_MID }}>Group chat — logic coming soon</p>
+              <p className="text-xs" style={{ color: TEXT_MID }}>Save the group and members to the database</p>
             </div>
           </div>
           <button type="button" onClick={onClose}
@@ -86,22 +127,74 @@ function CreateGroupModal({ onClose }) {
           </button>
         </div>
 
-        {/* Placeholder body */}
-        <div className="px-6 py-10 flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-            style={{ backgroundColor: ACCENT_LIGHT }}>
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke={ACCENT} strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
+        <div className="px-6 py-5 space-y-5 max-h-[75vh] overflow-y-auto">
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold uppercase tracking-wide" style={{ color: TEXT_MID }}>Group name</label>
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full rounded-xl border px-3 py-2.5 text-sm outline-none"
+              style={{ borderColor: ACCENT_BORDER, color: DARK }}
+              placeholder="e.g. Sales Team"
+            />
           </div>
-          <p className="text-sm font-semibold text-center" style={{ color: DARK }}>Group Chat Ready</p>
-          <p className="text-sm text-center max-w-xs" style={{ color: TEXT_MID, lineHeight: 1.6 }}>
-            The Create Group button is wired up. Tell Kiro what logic and members to add here.
-          </p>
-          <button type="button" onClick={onClose}
-            className="mt-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all"
-            style={{ backgroundColor: ACCENT, color: '#fff' }}>
-            Close
+
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold uppercase tracking-wide" style={{ color: TEXT_MID }}>Description</label>
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              rows={3}
+              className="w-full rounded-xl border px-3 py-2.5 text-sm outline-none resize-none"
+              style={{ borderColor: ACCENT_BORDER, color: DARK }}
+              placeholder="Optional description for this group"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-semibold uppercase tracking-wide" style={{ color: TEXT_MID }}>Members</label>
+              <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ backgroundColor: ACCENT_LIGHT, color: ACCENT }}>
+                {selectedMemberIds.length} selected
+              </span>
+            </div>
+
+            <div className="rounded-xl border max-h-64 overflow-y-auto p-2" style={{ borderColor: ACCENT_BORDER, backgroundColor: '#F9F5FF' }}>
+              {selectablePeople.length === 0 ? (
+                <p className="text-sm py-4 text-center" style={{ color: TEXT_MID }}>No contacts available to add.</p>
+              ) : selectablePeople.map(person => {
+                const isSelected = selectedMemberIds.includes(person.id)
+                return (
+                  <button
+                    key={person.id}
+                    type="button"
+                    onClick={() => toggleMember(person.id)}
+                    className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors"
+                    style={{ backgroundColor: isSelected ? ACCENT_LIGHT : 'transparent' }}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar name={person.name} color={palette[(person.id || '').length % palette.length]} size={34} />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold" style={{ color: DARK }}>{person.name}</p>
+                        <p className="text-[11px]" style={{ color: TEXT_MID }}>{person.role}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full border"
+                      style={{ borderColor: isSelected ? ACCENT : ACCENT_BORDER, backgroundColor: isSelected ? ACCENT : 'transparent' }}>
+                      {isSelected && <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 3" /></svg>}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 border-t px-6 py-4" style={{ borderColor: ACCENT_BORDER, backgroundColor: PANEL_BG }}>
+          <button type="button" onClick={onClose} className="rounded-xl px-4 py-2.5 text-sm font-semibold" style={{ color: TEXT_MID }}>
+            Cancel
+          </button>
+          <button type="button" onClick={handleSubmit} disabled={submitting} className="rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-60" style={{ backgroundColor: ACCENT, color: '#fff' }}>
+            {submitting ? 'Saving...' : 'Create Group'}
           </button>
         </div>
       </div>
