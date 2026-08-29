@@ -271,13 +271,13 @@ export default function Chat() {
 
   useEffect(() => {
     if (!selectedPersonId || selectedGroupId) return
-    const id = setInterval(() => loadMessages(selectedPersonId), 8000)
+    const id = setInterval(() => loadMessages(selectedPersonId), 30000)
     return () => clearInterval(id)
   }, [selectedPersonId, selectedGroupId, loadMessages])
 
   useEffect(() => {
     if (!selectedGroupId) return
-    const id = setInterval(() => loadGroupMessages(selectedGroupId), 8000)
+    const id = setInterval(() => loadGroupMessages(selectedGroupId), 30000)
     return () => clearInterval(id)
   }, [selectedGroupId, loadGroupMessages])
 
