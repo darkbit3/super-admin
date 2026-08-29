@@ -4,6 +4,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Manage from './pages/Manage'
+import Chat from './pages/Chat'
+import History from './pages/History'
 
 export default function App() {
   return (
@@ -26,6 +28,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Manage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.CHAT}
+          element={
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.HISTORY}
+          element={
+            <ProtectedRoute>
+              <History />
             </ProtectedRoute>
           }
         />
