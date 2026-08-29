@@ -281,6 +281,14 @@ export default function Chat() {
     return () => clearInterval(id)
   }, [selectedGroupId, loadGroupMessages])
 
+  useEffect(() => {
+    const id = setInterval(() => {
+      fetchGroups()
+      if (selectedGroupId) loadGroupMessages(selectedGroupId)
+    }, 15000)
+    return () => clearInterval(id)
+  }, [fetchGroups, loadGroupMessages, selectedGroupId])
+
   const filteredPeople = useMemo(() => {
     if (!search) return people
     const q = search.toLowerCase()
@@ -564,12 +572,13 @@ export default function Chat() {
         <CreateGroupModal
           people={people}
           onClose={() => setShowGroupModal(false)}
-          onCreate={(group) => {
+          onCreate={async (group) => {
             if (!group) return
             setGroups((prev) => [group, ...prev])
             setSelectedGroupId(group.id)
             setSelectedPersonId('')
             setMobileShowChat(true)
+            await fetchGroups()
           }}
         />
       )}
