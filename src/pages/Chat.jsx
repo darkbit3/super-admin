@@ -230,6 +230,7 @@ export default function Chat() {
         sender: m.isMine ? 'me' : 'them',
         text: m.message,
         time: formatTime(m.createdAt),
+        status: m.status || 'sent',
       }))
 
       const unreadCount = personId === selectedPersonId ? 0 : threadMessages.filter((m) => m.sender === 'them').length
@@ -254,6 +255,7 @@ export default function Chat() {
         text: m.message,
         time: formatTime(m.createdAt),
         senderName: m.senderRole === 'super_admin' ? 'Super Admin' : m.senderRole,
+        status: m.status || 'sent',
       }))
 
       const unreadCount = groupId === selectedGroupId ? 0 : threadMessages.filter((m) => m.sender === 'them').length
@@ -469,7 +471,14 @@ export default function Chat() {
                     <div className={`max-w-[72%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${msg.sender === 'me' ? 'rounded-br-sm' : 'rounded-bl-sm'}`} style={{ backgroundColor: msg.sender === 'me' ? ACCENT : '#F5F3FF', color: msg.sender === 'me' ? '#fff' : DARK }}>
                       {msg.sender !== 'me' && <p className="mb-1 text-[10px] font-semibold opacity-80">{msg.senderName || 'Group member'}</p>}
                       <p className="leading-relaxed break-words">{msg.text}</p>
-                      <p className="mt-1 text-[10px] opacity-70">{msg.time}</p>
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        <p className="text-[10px] opacity-70">{msg.time}</p>
+                        {msg.sender === 'me' && (
+                          <span className="text-[9px] font-bold" style={{ opacity: 0.8 }}>
+                            {msg.status === 'read' ? '✓✓' : '✓'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))
@@ -493,7 +502,14 @@ export default function Chat() {
                     {msg.sender !== 'me' && <Avatar name={selectedPerson.name} color={selectedPerson.role === 'Admin' ? ACCENT : palette[2]} size={28} />}
                     <div className={`max-w-[72%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${msg.sender === 'me' ? 'rounded-br-sm' : 'rounded-bl-sm'}`} style={{ backgroundColor: msg.sender === 'me' ? ACCENT : '#F5F3FF', color: msg.sender === 'me' ? '#fff' : DARK }}>
                       <p className="leading-relaxed break-words">{msg.text}</p>
-                      <p className="mt-1 text-[10px] opacity-70">{msg.time}</p>
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        <p className="text-[10px] opacity-70">{msg.time}</p>
+                        {msg.sender === 'me' && (
+                          <span className="text-[9px] font-bold" style={{ opacity: 0.8 }}>
+                            {msg.status === 'read' ? '✓✓' : '✓'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))
