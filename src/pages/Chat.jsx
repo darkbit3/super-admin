@@ -183,6 +183,7 @@ export default function Chat() {
   const [mobileShowChat, setMobileShowChat] = useState(false)
   const [showGroupModal, setShowGroupModal] = useState(false)
   const [unreadMap, setUnreadMap] = useState({})
+  const pollDelayRef = useRef(30000)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -280,13 +281,13 @@ export default function Chat() {
 
   useEffect(() => {
     if (!selectedPersonId || selectedGroupId) return
-    const id = setInterval(() => loadMessages(selectedPersonId), 30000)
+    const id = setInterval(() => loadMessages(selectedPersonId), 60000)
     return () => clearInterval(id)
   }, [selectedPersonId, selectedGroupId, loadMessages])
 
   useEffect(() => {
     if (!selectedGroupId) return
-    const id = setInterval(() => loadGroupMessages(selectedGroupId), 30000)
+    const id = setInterval(() => loadGroupMessages(selectedGroupId), 60000)
     return () => clearInterval(id)
   }, [selectedGroupId, loadGroupMessages])
 
@@ -294,7 +295,7 @@ export default function Chat() {
     const id = setInterval(() => {
       fetchGroups()
       if (selectedGroupId) loadGroupMessages(selectedGroupId)
-    }, 15000)
+    }, 30000)
     return () => clearInterval(id)
   }, [fetchGroups, loadGroupMessages, selectedGroupId])
 
