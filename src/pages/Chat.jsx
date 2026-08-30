@@ -182,6 +182,7 @@ export default function Chat() {
   const [sending, setSending] = useState(false)
   const [mobileShowChat, setMobileShowChat] = useState(false)
   const [showGroupModal, setShowGroupModal] = useState(false)
+  const [unreadMap, setUnreadMap] = useState({})
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -223,39 +224,47 @@ export default function Chat() {
     try {
       setLoadingMessages(true)
       const res = await api.get(`/chat/messages/${personId}`)
-      setMessages((res?.data || []).map((m) => ({
+      const threadMessages = (res?.data || []).map((m) => ({
         id: m.id,
         sender: m.isMine ? 'me' : 'them',
         text: m.message,
         time: formatTime(m.createdAt),
-      })))
+      }))
+
+      const unreadCount = personId === selectedPersonId ? 0 : threadMessages.filter((m) => m.sender === 'them').length
+      setUnreadMap((prev) => ({ ...prev, [personId]: unreadCount }))
+      setMessages(threadMessages)
     } catch (err) {
       console.error('Failed to load messages', err)
       setMessages([])
     } finally {
       setLoadingMessages(false)
     }
-  }, [])
+  }, [selectedPersonId])
 
   const loadGroupMessages = useCallback(async (groupId) => {
     if (!groupId) return
     try {
       setLoadingGroupMessages(true)
       const res = await api.get(`/chat/groups/${groupId}/messages`)
-      setGroupMessages((res?.data || []).map((m) => ({
+      const threadMessages = (res?.data || []).map((m) => ({
         id: m.id,
         sender: m.isMine ? 'me' : 'them',
         text: m.message,
         time: formatTime(m.createdAt),
         senderName: m.senderRole === 'super_admin' ? 'Super Admin' : m.senderRole,
-      })))
+      }))
+
+      const unreadCount = groupId === selectedGroupId ? 0 : threadMessages.filter((m) => m.sender === 'them').length
+      setUnreadMap((prev) => ({ ...prev, [groupId]: unreadCount }))
+      setGroupMessages(threadMessages)
     } catch (err) {
       console.error('Failed to load group messages', err)
       setGroupMessages([])
     } finally {
       setLoadingGroupMessages(false)
     }
-  }, [])
+  }, [selectedGroupId])
 
   useEffect(() => {
     if (selectedGroupId) {
@@ -352,18 +361,21 @@ export default function Chat() {
   const selectPerson = (id) => {
     setSelectedPersonId(id)
     setSelectedGroupId('')
+    setUnreadMap((prev) => ({ ...prev, [id]: 0 }))
     setMobileShowChat(true)
   }
 
   const selectGroup = (id) => {
     setSelectedGroupId(id)
     setSelectedPersonId('')
+    setUnreadMap((prev) => ({ ...prev, [id]: 0 }))
     setMobileShowChat(true)
   }
 
   const PersonRow = ({ person, colorIdx }) => {
     const color = palette[colorIdx % palette.length]
     const isSelected = person.id === selectedPersonId
+    const unreadCount = unreadMap[person.id] || 0
     return (
       <button type="button" onClick={() => selectPerson(person.id)} className="flex w-full items-center gap-3 px-4 py-3 text-left transition-all border-b" style={{ backgroundColor: isSelected ? ACCENT_LIGHT : 'transparent', borderColor: ACCENT_BORDER, borderLeft: isSelected ? `3px solid ${ACCENT}` : '3px solid transparent' }}>
         <Avatar name={person.name} color={color} />
@@ -371,13 +383,21 @@ export default function Chat() {
           <p className="truncate text-sm font-semibold mb-0.5" style={{ color: DARK }}>{person.name}</p>
           <RoleBadge role={person.role} />
         </div>
-        <span className="flex-shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: person.status === 'Active' ? '#10B981' : '#9CA3AF' }} />
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <span className="inline-flex min-w-[20px] h-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-white" style={{ backgroundColor: '#ef4444' }}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+          <span className="flex-shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: person.status === 'Active' ? '#10B981' : '#9CA3AF' }} />
+        </div>
       </button>
     )
   }
 
   const GroupRow = ({ group }) => {
     const isSelected = group.id === selectedGroupId
+    const unreadCount = unreadMap[group.id] || 0
     return (
       <button type="button" onClick={() => selectGroup(group.id)} className="flex w-full items-center gap-3 px-4 py-3 text-left transition-all border-b" style={{ backgroundColor: isSelected ? ACCENT_LIGHT : 'transparent', borderColor: ACCENT_BORDER, borderLeft: isSelected ? `3px solid ${ACCENT}` : '3px solid transparent' }}>
         <Avatar name={group.name} color="#10B981" />
@@ -385,7 +405,14 @@ export default function Chat() {
           <p className="truncate text-sm font-semibold mb-0.5" style={{ color: DARK }}>{group.name}</p>
           <p className="text-[11px] truncate" style={{ color: TEXT_MID }}>{group.description || `${group.memberCount || 0} members`}</p>
         </div>
-        <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ backgroundColor: ACCENT_LIGHT, color: ACCENT }}>{group.memberCount || 0}</span>
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <span className="inline-flex min-w-[20px] h-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-white" style={{ backgroundColor: '#ef4444' }}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+          <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ backgroundColor: ACCENT_LIGHT, color: ACCENT }}>{group.memberCount || 0}</span>
+        </div>
       </button>
     )
   }
