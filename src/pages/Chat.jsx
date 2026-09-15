@@ -200,7 +200,7 @@ export default function Chat() {
     } finally {
       setLoadingPeople(false)
     }
-  }, [selectedGroupId, selectedPersonId])
+  }, [])
 
   const fetchGroups = useCallback(async () => {
     try {
