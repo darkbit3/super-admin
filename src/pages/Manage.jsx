@@ -237,6 +237,9 @@ export default function Manage() {
   const [searchQuery, setSearchQuery]       = useState('')
   const [statusFilter, setStatusFilter]     = useState('All')
 
+  const [addLoading,     setAddLoading]     = useState(false)
+  const [editLoading,    setEditLoading]    = useState(false)
+  const [resetLoading,   setResetLoading]   = useState(false)
   const [showAddModal,   setShowAddModal]   = useState(false)
   const [showEditModal,  setShowEditModal]  = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
