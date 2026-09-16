@@ -22,6 +22,11 @@ const IconHistory = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 )
+const IconRegisterFee = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 10v6M6.5 6.5l1.1 1.1m9.2 9.2l1.1 1.1M17.5 6.5l-1.1 1.1M8.4 15.6l-1.1 1.1" />
+  </svg>
+)
 const IconLogout = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -35,10 +40,11 @@ const ACCENT_BORDER = 'rgba(124,58,237,0.35)'
 const DARK = '#1A0A2E'
 
 const navItems = [
-  { label: 'Dashboard',    path: ROUTES.DASHBOARD, icon: <IconDashboard /> },
-  { label: 'Manage Admins', path: ROUTES.MANAGE,    icon: <IconManage /> },
-  { label: 'Chat',         path: ROUTES.CHAT,       icon: <IconChat /> },
-  { label: 'History',      path: ROUTES.HISTORY,    icon: <IconHistory /> },
+  { label: 'Dashboard',    path: ROUTES.DASHBOARD,    icon: <IconDashboard /> },
+  { label: 'Manage Admins', path: ROUTES.MANAGE,       icon: <IconManage /> },
+  { label: 'Register Fee', path: ROUTES.REGISTER_FEE, icon: <IconRegisterFee /> },
+  { label: 'Chat',         path: ROUTES.CHAT,          icon: <IconChat /> },
+  { label: 'History',      path: ROUTES.HISTORY,       icon: <IconHistory /> },
 ]
 
 function SidebarContent({ onNavClick, onLogout }) {

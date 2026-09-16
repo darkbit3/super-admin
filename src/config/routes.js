@@ -7,6 +7,7 @@ export const ROUTES = {
   LOGIN:           '/',
   DASHBOARD:       '/ZGFzaGJvYXJk',
   MANAGE:          '/bWFuYWdl',
+  REGISTER_FEE:    '/cmVnaXN0ZXItZmVl',
   CHAT:            '/Y2hhdA==',
   HISTORY:         '/aGlzdG9yeQ==',
 }
