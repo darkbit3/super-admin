@@ -37,8 +37,8 @@ export default function Login() {
       {/* Left panel */}
       <div className="hidden lg:flex flex-col justify-between w-2/5 p-12" style={{ backgroundColor: DARK }}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0" style={{ backgroundColor: ACCENT }}>
-            <img src="/logo.png" alt="Shmeta" className="w-full h-full object-cover" onError={e => { e.target.style.display = 'none' }} />
+          <div className="w-11 h-11 rounded-xl bg-white shadow-md flex items-center justify-center p-1 overflow-hidden flex-shrink-0 border border-purple-200/30">
+            <img src="/logo.png" alt="Shmeta Super Admin" className="w-full h-full object-contain" />
           </div>
           <span className="text-lg font-bold tracking-wide" style={{ color: '#F0EAF8', fontFamily: 'Georgia, serif' }}>Shmeta</span>
         </div>
@@ -58,8 +58,8 @@ export default function Login() {
         <div className="w-full max-w-md">
           {/* Mobile header */}
           <div className="lg:hidden mb-8 text-center">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden mx-auto mb-3" style={{ backgroundColor: ACCENT }}>
-              <img src="/logo.png" alt="Shmeta" className="w-full h-full object-cover" onError={e => { e.target.style.display = 'none' }} />
+            <div className="w-20 h-20 rounded-2xl bg-white shadow-md flex items-center justify-center p-2 mx-auto mb-3 overflow-hidden border border-purple-200/30">
+              <img src="/logo.png" alt="Shmeta Super Admin" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-2xl font-bold" style={{ color: DARK, fontFamily: 'Georgia, serif' }}>Shmeta</h1>
             <p className="text-xs tracking-widest uppercase font-medium mt-1" style={{ color: ACCENT }}>Super Admin Portal</p>
