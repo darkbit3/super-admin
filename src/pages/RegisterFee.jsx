@@ -7,7 +7,7 @@ const ACCENT = '#7C3AED'
 
 export default function RegisterFee() {
   const toast = useToast()
-  const [fee, setFee] = useState('')
+  const [plans, setPlans] = useState({ oneMonth: '', twoMonths: '', threeMonths: '' })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -17,7 +17,11 @@ export default function RegisterFee() {
     setError('')
     try {
       const response = await manageApi.getRegisterFee()
-      setFee(String(response?.fee ?? 0))
+      setPlans({
+        oneMonth: String(response?.oneMonth ?? 0),
+        twoMonths: String(response?.twoMonths ?? 0),
+        threeMonths: String(response?.threeMonths ?? 0),
+      })
     } catch (err) {
       const message = err.message || 'Failed to load register fee'
       setError(message)
@@ -32,17 +36,21 @@ export default function RegisterFee() {
   }, [])
 
   const handleSave = async () => {
-    const raw = Number(fee)
-    if (!Number.isFinite(raw) || raw < 0) {
-      setError('Register fee must be a valid non-negative number')
+    const values = Object.fromEntries(Object.entries(plans).map(([key, value]) => [key, Number(value)]))
+    if (Object.values(values).some(value => !Number.isFinite(value) || value < 0)) {
+      setError('Each register fee must be a valid non-negative number')
       return
     }
 
     setSaving(true)
     setError('')
     try {
-      const response = await manageApi.updateRegisterFee(raw)
-      setFee(String(response?.data?.fee ?? raw))
+      const response = await manageApi.updateRegisterFee(values)
+      setPlans({
+        oneMonth: String(response?.data?.oneMonth ?? values.oneMonth),
+        twoMonths: String(response?.data?.twoMonths ?? values.twoMonths),
+        threeMonths: String(response?.data?.threeMonths ?? values.threeMonths),
+      })
       toast.success('Register fee updated successfully')
     } catch (err) {
       const message = err.message || 'Unable to update register fee'
@@ -81,28 +89,34 @@ export default function RegisterFee() {
 
       <div className="bg-white rounded-2xl border p-5 sm:p-6" style={{ borderColor: '#DDD0F0' }}>
         <div className="mb-6">
-          <p className="text-sm font-medium" style={{ color: '#3A2A4A' }}>Registration price charged to new user accounts</p>
-          <p className="mt-1 text-sm" style={{ color: '#7A6A8A' }}>Set the one-time fee users must pay when they register.</p>
+          <p className="text-sm font-medium" style={{ color: '#3A2A4A' }}>Registration plan prices</p>
+          <p className="mt-1 text-sm" style={{ color: '#7A6A8A' }}>Set the amount for each free-period plan. All three values are saved together.</p>
         </div>
 
         <div className="max-w-lg space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: '#3A2A4A' }}>Fee Amount</label>
-            <div className="flex items-center border rounded-xl overflow-hidden" style={{ borderColor: '#DDD0F0' }}>
-              <span className="px-3 py-3 text-sm font-semibold" style={{ backgroundColor: '#F5F1FF', color: ACCENT }}>ETB</span>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={fee}
-                onChange={(e) => setFee(e.target.value)}
-                disabled={loading || saving}
-                placeholder="0.00"
-                className="w-full px-3 py-3 text-sm outline-none bg-white"
-                style={{ color: '#1A0A2E' }}
-              />
+          {[
+            ['oneMonth', 'Free for 1 month'],
+            ['twoMonths', 'Free for 2 months'],
+            ['threeMonths', 'Free for 3 months'],
+          ].map(([key, label]) => (
+            <div key={key}>
+              <label className="block text-sm font-medium mb-2" style={{ color: '#3A2A4A' }}>{label}</label>
+              <div className="flex items-center border rounded-xl overflow-hidden" style={{ borderColor: '#DDD0F0' }}>
+                <span className="px-3 py-3 text-sm font-semibold" style={{ backgroundColor: '#F5F1FF', color: ACCENT }}>ETB</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={plans[key]}
+                  onChange={(e) => setPlans(current => ({ ...current, [key]: e.target.value }))}
+                  disabled={loading || saving}
+                  placeholder="0.00"
+                  className="w-full px-3 py-3 text-sm outline-none bg-white"
+                  style={{ color: '#1A0A2E' }}
+                />
+              </div>
             </div>
-          </div>
+          ))}
 
           <button
             type="button"

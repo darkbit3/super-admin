@@ -6,7 +6,7 @@ export const manageApi = {
 
   // Settings
   getRegisterFee: () => api.get('/super/admins/settings/register-fee').then(r => r.data),
-  updateRegisterFee: (fee) => api.put('/super/admins/settings/register-fee', { fee }).then(r => r.data),
+  updateRegisterFee: (plans) => api.put('/super/admins/settings/register-fee', plans).then(r => r.data),
 
   // Single operations
   getAll: () => api.get('/super/admins').then(r => r.data),
