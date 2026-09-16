@@ -8,22 +8,6 @@ import { useToast } from '../context/ToastContext'
 const ACCENT        = '#7C3AED'
 const DARK          = '#1A0A2E'
 
-// ── phone helpers ──────────────────────────────────────────────────────────
-function usePhoneInput() {
-  const [raw, setRaw] = useState('')
-  const full  = raw ? '0' + raw : ''
-  const valid = raw.length === 9 && (raw[0] === '9' || raw[0] === '7')
-
-  const onChange = (e) => {
-    let v = e.target.value.replace(/\D/g, '')
-    if (v.startsWith('0')) v = v.slice(1)
-    if (v.length === 1 && v !== '9' && v !== '7') return
-    if (v.length > 9) return
-    setRaw(v)
-  }
-
-  return { raw, full, valid, onChange }
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Main
