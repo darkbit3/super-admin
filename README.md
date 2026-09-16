@@ -24,7 +24,7 @@ npm start
 3. Configure the frontend API URL in `super-admin/.env`:
 
 ```text
-VITE_API_URL=https://backend-1-khts.onrender.com/api
+VITE_API_URL=https://backend-1-naba.onrender.com/api
 ```
 
 4. Start the frontend:

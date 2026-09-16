@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-1-khts.onrender.com/api'
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-1-naba.onrender.com/api'
 const SERVER_ROOT = BASE_URL.replace(/\/api$/, '')
 const REQUEST_TIMEOUT_MS = 30_000 // 30 seconds
 
