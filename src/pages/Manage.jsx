@@ -157,6 +157,7 @@ function ConfirmDeleteModal({ message, subMessage, onConfirm, onCancel, loading 
 function PhoneInput({ value, onChange, error }) {
   const handleChange = (e) => {
     let raw = e.target.value.replace(/\D/g, '')
+    if (raw.startsWith('251')) raw = raw.slice(3)
     if (raw.startsWith('0')) raw = raw.slice(1)
     if (raw.length === 1 && raw !== '9' && raw !== '7') return
     if (raw.length > 9) return
