@@ -1,4 +1,6 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-1-khts.onrender.com/api'
+const SERVER_ROOT = BASE_URL.replace(/\/api$/, '')
+const REQUEST_TIMEOUT_MS = 30_000 // 30 seconds
 
 function getAccessToken() {
   return localStorage.getItem('sa_access_token')
@@ -15,11 +17,46 @@ export function clearTokens() {
   localStorage.removeItem('sa_auth')
 }
 
+// Ping the server to wake it up (Render free-tier cold start)
+export async function warmUp(signal) {
+  try {
+    await fetch(`${SERVER_ROOT}/health`, { method: 'GET', signal })
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  try {
+    // Merge caller's signal with our timeout signal
+    const signal = options.signal
+      ? anySignal([options.signal, controller.signal])
+      : controller.signal
+    const res = await fetch(url, { ...options, signal })
+    return res
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// Combine multiple abort signals — aborts when any fires
+function anySignal(signals) {
+  const controller = new AbortController()
+  for (const signal of signals) {
+    if (signal.aborted) { controller.abort(); break }
+    signal.addEventListener('abort', () => controller.abort(), { once: true })
+  }
+  return controller.signal
+}
+
 async function refreshAccessToken() {
   const refreshToken = localStorage.getItem('sa_refresh_token')
   if (!refreshToken) throw new Error('No refresh token')
 
-  const res = await fetch(`${BASE_URL}/super-auth/refresh`, {
+  const res = await fetchWithTimeout(`${BASE_URL}/super-auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),
@@ -39,14 +76,24 @@ async function refreshAccessToken() {
 async function request(path, options = {}, retry = true, refreshOnUnauthorized = true) {
   const token = getAccessToken()
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  })
+  let res
+  try {
+    res = await fetchWithTimeout(`${BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    })
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      const timeoutErr = new Error('Request timed out. The server may be starting up — please try again.')
+      timeoutErr.status = 408
+      throw timeoutErr
+    }
+    throw new Error('Unable to reach server. Check your connection and try again.')
+  }
 
   // Token expired — try silent refresh once
   if (res.status === 401 && retry && refreshOnUnauthorized) {

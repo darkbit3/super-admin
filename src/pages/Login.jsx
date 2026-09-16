@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ROUTES } from '../config/routes'
 import { authApi } from '../api/authApi'
-import { api } from '../api/client'
+import { api, warmUp } from '../api/client'
 import { useToast } from '../context/ToastContext'
 import { Spinner } from '../components/Loaders'
 
@@ -102,13 +102,32 @@ function LoginForm({ onForgot }) {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
+  const [serverReady, setServerReady] = useState(false)
+  const elapsedRef = useRef(null)
   const navigate = useNavigate()
   const toast = useToast()
 
+  // Warm up the server on page load (Render free tier spins down after inactivity)
   useEffect(() => {
-    const BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-1-khts.onrender.com/api'
-    fetch(`${BASE_URL.replace(/\/api$/, '')}/health`).catch(() => {})
+    const controller = new AbortController()
+    warmUp(controller.signal).then(ok => {
+      if (!controller.signal.aborted) setServerReady(ok)
+    })
+    return () => controller.abort()
   }, [])
+
+  // Track elapsed seconds during login so user sees progress
+  useEffect(() => {
+    if (loading) {
+      setElapsed(0)
+      elapsedRef.current = setInterval(() => setElapsed(s => s + 1), 1000)
+    } else {
+      clearInterval(elapsedRef.current)
+      setElapsed(0)
+    }
+    return () => clearInterval(elapsedRef.current)
+  }, [loading])
 
   const handleInputChange = (e) => {
     const val = e.target.value
@@ -339,17 +358,40 @@ function LoginForm({ onForgot }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-2 font-bold py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white shadow-lg shadow-violet-500/25 active:scale-[0.99] transition-all duration-150 disabled:opacity-60 flex items-center justify-center gap-2"
+          className="w-full mt-2 font-bold py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white shadow-lg shadow-violet-500/25 active:scale-[0.99] transition-all duration-150 disabled:opacity-80 flex items-center justify-center gap-2"
         >
           {loading ? (
             <>
               <Spinner size="sm" className="border-white/30 border-t-white" />
-              <span>Authenticating…</span>
+              <span>
+                {elapsed < 4
+                  ? 'Authenticating…'
+                  : elapsed < 12
+                  ? `Starting up… ${elapsed}s`
+                  : `Server waking up… ${elapsed}s`}
+              </span>
             </>
           ) : (
             <span>Sign In to Super Admin</span>
           )}
         </button>
+
+        {/* Show warm-up notice after 4 seconds */}
+        {loading && elapsed >= 4 && (
+          <p className="text-center text-xs text-violet-500/80 mt-2 animate-pulse font-medium">
+            {elapsed < 12
+              ? '⚡ Server is starting up — almost ready…'
+              : '🚀 Server is waking up from sleep (free tier). This takes up to 30s once.'}
+          </p>
+        )}
+
+        {/* Server ready indicator */}
+        {!loading && serverReady && (
+          <p className="text-center text-[11px] text-emerald-600 mt-1.5 font-medium">
+            ✓ Server is ready
+          </p>
+        )}
+
       </form>
     </div>
   )
