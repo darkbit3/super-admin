@@ -12,7 +12,7 @@ beforeEach(() => {
 })
 
 describe('super-admin authentication', () => {
-  it('shows the API error for invalid credentials', async () => {
+  it('shows invalid username or password error when input is a username', async () => {
     vi.spyOn(global, 'fetch').mockImplementation((url) => {
       if (url.endsWith('/health')) return Promise.resolve(new Response('{}', { status: 200 }))
       return Promise.resolve(new Response(JSON.stringify({ message: 'Invalid phone or password' }), {
@@ -25,7 +25,23 @@ describe('super-admin authentication', () => {
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'wrong-password' } })
     fireEvent.click(screen.getByRole('button', { name: 'Sign In as Super Admin' }))
 
-    expect(await screen.findByText('Invalid phone or password')).toBeVisible()
+    expect(await screen.findByText('Invalid username or password')).toBeVisible()
+  })
+
+  it('shows invalid phone number or password error when input is a phone number', async () => {
+    vi.spyOn(global, 'fetch').mockImplementation((url) => {
+      if (url.endsWith('/health')) return Promise.resolve(new Response('{}', { status: 200 }))
+      return Promise.resolve(new Response(JSON.stringify({ message: 'Invalid phone or password' }), {
+        status: 401, headers: { 'content-type': 'application/json' },
+      }))
+    })
+
+    render(<MemoryRouter><Login /></MemoryRouter>)
+    fireEvent.change(screen.getByLabelText('Username or Phone'), { target: { value: '0912345678' } })
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'wrong-password' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Sign In as Super Admin' }))
+
+    expect(await screen.findByText('Invalid phone number or password')).toBeVisible()
   })
 
   it('does not allow a stale auth flag without both tokens', () => {

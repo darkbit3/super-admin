@@ -94,11 +94,49 @@ function LoginForm({ onForgot }) {
     const loginInput = username.trim()
     if (!loginInput) { setError('Please enter your username or phone number'); return }
     setError(''); setLoading(true)
+
+    // Detect if input is phone number (numeric) or username (alphabetic/alphanumeric)
+    const hasLetters = /[a-zA-Z]/.test(loginInput)
+    const digitsOnly = loginInput.replace(/[\s\-().+]/g, '')
+    const isPhone = !hasLetters && digitsOnly.length >= 3 && /^\d+$/.test(digitsOnly)
+
+    const expectedAuthError = isPhone
+      ? 'Invalid phone number or password'
+      : 'Invalid username or password'
+
     try {
-      await authApi.login(loginInput, password)
+      const admin = await authApi.login(loginInput, password)
+
+      // Strict case-sensitive check on username
+      if (!isPhone && admin) {
+        const matchesExactCase =
+          (admin.name && admin.name === loginInput) ||
+          (admin.phone && admin.phone === loginInput)
+
+        if (!matchesExactCase) {
+          await authApi.logout().catch(() => {})
+          setError('Invalid username or password')
+          return
+        }
+      }
+
       navigate(ROUTES.DASHBOARD)
     } catch (err) {
-      setError(err.message || 'Invalid username or password')
+      const msg = err.message || ''
+      const isAuthError =
+        !err.status ||
+        err.status === 401 ||
+        /invalid/i.test(msg) ||
+        /phone/i.test(msg) ||
+        /password/i.test(msg) ||
+        /username/i.test(msg) ||
+        /credentials/i.test(msg)
+
+      if (isAuthError) {
+        setError(expectedAuthError)
+      } else {
+        setError(msg || expectedAuthError)
+      }
     } finally {
       setLoading(false)
     }
@@ -117,8 +155,9 @@ function LoginForm({ onForgot }) {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: '#3A2A4A' }}>Username or Phone</label>
+          <label htmlFor="login-username" className="block text-sm font-medium mb-1.5" style={{ color: '#3A2A4A' }}>Username or Phone</label>
           <input
+            id="login-username"
             type="text" value={username} onChange={e => setUsername(e.target.value)}
             placeholder="Enter username or phone" required
             className="w-full border rounded-lg px-4 py-2.5 text-sm outline-none"
@@ -127,9 +166,10 @@ function LoginForm({ onForgot }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: '#3A2A4A' }}>Password</label>
+          <label htmlFor="login-password" className="block text-sm font-medium mb-1.5" style={{ color: '#3A2A4A' }}>Password</label>
           <div className="flex items-center border rounded-lg overflow-hidden" style={{ borderColor: '#DDD0F0' }}>
             <input
+              id="login-password"
               type={showPassword ? 'text' : 'password'} value={password}
               onChange={e => setPassword(e.target.value)} placeholder="••••••••" required
               className="flex-1 px-4 py-2.5 text-sm outline-none bg-white" style={{ color: DARK }}
