@@ -227,6 +227,22 @@ export default function RegistrationApprovals() {
                       <p>📞 {req.phone}</p>
                       <p>🏷️ <span className="font-medium text-slate-700">{req.plan_label || req.plan_key}</span> — <span className="text-violet-700 font-bold">ETB {req.fee}</span></p>
                       <p>👤 {req.role}</p>
+                      {req.telegram_username && (
+                        <p className="flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-sky-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.018 9.51c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.881.711z"/>
+                          </svg>
+                          <a
+                            href={`https://t.me/${req.telegram_username.replace('@', '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sky-600 font-semibold hover:text-sky-800 hover:underline"
+                          >
+                            {req.telegram_username}
+                          </a>
+                          <span className="text-slate-400">(sent receipt here)</span>
+                        </p>
+                      )}
                       {req.rejection_reason && (
                         <p className="text-red-600">❗ Reason: {req.rejection_reason}</p>
                       )}
