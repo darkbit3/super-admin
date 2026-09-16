@@ -57,7 +57,7 @@ export default function Login() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Login form (username or phone)
+// Login form (username )
 // ═══════════════════════════════════════════════════════════════════════════
 function LoginForm({ onForgot }) {
   const [inputValue, setInputValue]     = useState('')
@@ -243,7 +243,7 @@ function LoginForm({ onForgot }) {
               className="text-xs font-semibold hover:underline"
               style={{ color: ACCENT }}
             >
-              {isPhoneMode ? 'Use Username' : 'Use Phone (251)'}
+              {isPhoneMode ? 'Use Username' : 'Use Phone'}
             </button>
           </div>
 
@@ -261,7 +261,7 @@ function LoginForm({ onForgot }) {
             )}
             <input
               id="login-username"
-              aria-label="Username or Phone"
+              aria-label="Username"
               type={isPhoneMode ? 'tel' : 'text'}
               inputMode={isPhoneMode ? 'numeric' : 'text'}
               value={inputValue}
