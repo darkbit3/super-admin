@@ -16,9 +16,10 @@ const STATUS_DOTS = {
 }
 
 function StatusPill({ status }) {
+  const s = (status || '').toLowerCase()
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase border ${STATUS_COLORS[status] || 'bg-slate-100 text-slate-500'}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOTS[status] || 'bg-slate-400'}`} />
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase border ${STATUS_COLORS[s] || 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOTS[s] || 'bg-slate-400'}`} />
       {status}
     </span>
   )
@@ -224,7 +225,7 @@ export default function RegistrationApprovals() {
                     </div>
                     <div className="text-xs text-slate-500 space-y-0.5">
                       <p>📞 {req.phone}</p>
-                      <p>🏷️ <span className="font-medium text-slate-700">{req.plan_name || req.plan_key}</span> — <span className="text-violet-700 font-bold">ETB {req.amount_paid}</span></p>
+                      <p>🏷️ <span className="font-medium text-slate-700">{req.plan_label || req.plan_key}</span> — <span className="text-violet-700 font-bold">ETB {req.fee}</span></p>
                       <p>👤 {req.role}</p>
                       {req.rejection_reason && (
                         <p className="text-red-600">❗ Reason: {req.rejection_reason}</p>
@@ -238,7 +239,7 @@ export default function RegistrationApprovals() {
                   <span className="text-[10px] text-slate-400 font-medium">
                     {req.created_at ? new Date(req.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
                   </span>
-                  {req.status === 'pending' && (
+                  {(req.status || '').toLowerCase() === 'pending' && (
                     <div className="flex gap-2">
                       <button id={`approve-btn-${req.id}`} type="button"
                         disabled={actionLoading === req.id}
@@ -254,13 +255,13 @@ export default function RegistrationApprovals() {
                       </button>
                     </div>
                   )}
-                  {req.status === 'approved' && (
+                  {(req.status || '').toLowerCase() === 'approved' && (
                     <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
                       ✅ Approved
                       {req.reviewed_at && <span className="text-slate-400 font-normal">· {new Date(req.reviewed_at).toLocaleDateString()}</span>}
                     </span>
                   )}
-                  {req.status === 'rejected' && (
+                  {(req.status || '').toLowerCase() === 'rejected' && (
                     <span className="text-xs font-semibold text-red-500 flex items-center gap-1">
                       ❌ Rejected
                       {req.reviewed_at && <span className="text-slate-400 font-normal">· {new Date(req.reviewed_at).toLocaleDateString()}</span>}
