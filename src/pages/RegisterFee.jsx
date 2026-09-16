@@ -4,10 +4,19 @@ import { manageApi } from '../api/manageApi'
 import { useToast } from '../context/ToastContext'
 
 const ACCENT = '#7C3AED'
+const PLAN_DEFS = [
+  ['oneMonth', 'Free for 1 month'],
+  ['twoMonths', 'Free for 2 months'],
+  ['threeMonths', 'Free for 3 months'],
+  ['sixMonths', 'Free for 6 months'],
+  ['oneYear', 'Free for 1 year'],
+]
+
+const emptyPlans = Object.fromEntries(PLAN_DEFS.map(([key]) => [key, { fee: '', enabled: true }]))
 
 export default function RegisterFee() {
   const toast = useToast()
-  const [plans, setPlans] = useState({ oneMonth: '', twoMonths: '', threeMonths: '' })
+  const [plans, setPlans] = useState(emptyPlans)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -17,11 +26,10 @@ export default function RegisterFee() {
     setError('')
     try {
       const response = await manageApi.getRegisterFee()
-      setPlans({
-        oneMonth: String(response?.oneMonth ?? 0),
-        twoMonths: String(response?.twoMonths ?? 0),
-        threeMonths: String(response?.threeMonths ?? 0),
-      })
+      setPlans(Object.fromEntries(PLAN_DEFS.map(([key]) => [key, {
+        fee: String(response?.[key]?.fee ?? 0),
+        enabled: response?.[key]?.enabled !== false,
+      }])))
     } catch (err) {
       const message = err.message || 'Failed to load register fee'
       setError(message)
@@ -36,8 +44,11 @@ export default function RegisterFee() {
   }, [])
 
   const handleSave = async () => {
-    const values = Object.fromEntries(Object.entries(plans).map(([key, value]) => [key, Number(value)]))
-    if (Object.values(values).some(value => !Number.isFinite(value) || value < 0)) {
+    const values = Object.fromEntries(Object.entries(plans).map(([key, value]) => [key, {
+      fee: Number(value.fee),
+      enabled: value.enabled,
+    }]))
+    if (Object.values(values).some(value => !Number.isFinite(value.fee) || value.fee < 0)) {
       setError('Each register fee must be a valid non-negative number')
       return
     }
@@ -46,11 +57,10 @@ export default function RegisterFee() {
     setError('')
     try {
       const response = await manageApi.updateRegisterFee(values)
-      setPlans({
-        oneMonth: String(response?.data?.oneMonth ?? values.oneMonth),
-        twoMonths: String(response?.data?.twoMonths ?? values.twoMonths),
-        threeMonths: String(response?.data?.threeMonths ?? values.threeMonths),
-      })
+      setPlans(Object.fromEntries(PLAN_DEFS.map(([key]) => [key, {
+        fee: String(response?.data?.[key]?.fee ?? values[key].fee),
+        enabled: response?.data?.[key]?.enabled ?? values[key].enabled,
+      }])))
       toast.success('Register fee updated successfully')
     } catch (err) {
       const message = err.message || 'Unable to update register fee'
@@ -90,25 +100,33 @@ export default function RegisterFee() {
       <div className="bg-white rounded-2xl border p-5 sm:p-6" style={{ borderColor: '#DDD0F0' }}>
         <div className="mb-6">
           <p className="text-sm font-medium" style={{ color: '#3A2A4A' }}>Registration plan prices</p>
-          <p className="mt-1 text-sm" style={{ color: '#7A6A8A' }}>Set the amount for each free-period plan. All three values are saved together.</p>
+          <p className="mt-1 text-sm" style={{ color: '#7A6A8A' }}>Turn plans on or off and set the amount for each free-period option.</p>
         </div>
 
         <div className="max-w-lg space-y-4">
-          {[
-            ['oneMonth', 'Free for 1 month'],
-            ['twoMonths', 'Free for 2 months'],
-            ['threeMonths', 'Free for 3 months'],
-          ].map(([key, label]) => (
-            <div key={key}>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#3A2A4A' }}>{label}</label>
+          {PLAN_DEFS.map(([key, label]) => (
+            <div key={key} className="border rounded-xl p-4" style={{ borderColor: '#DDD0F0' }}>
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <label className="text-sm font-medium" style={{ color: '#3A2A4A' }}>{label}</label>
+                <label className="inline-flex items-center gap-2 text-xs font-semibold cursor-pointer" style={{ color: plans[key].enabled ? '#15803D' : '#7A6A8A' }}>
+                  <input
+                    type="checkbox"
+                    checked={plans[key].enabled}
+                    onChange={(e) => setPlans(current => ({ ...current, [key]: { ...current[key], enabled: e.target.checked } }))}
+                    disabled={loading || saving}
+                    className="w-4 h-4 accent-violet-600"
+                  />
+                  {plans[key].enabled ? 'On' : 'Off'}
+                </label>
+              </div>
               <div className="flex items-center border rounded-xl overflow-hidden" style={{ borderColor: '#DDD0F0' }}>
                 <span className="px-3 py-3 text-sm font-semibold" style={{ backgroundColor: '#F5F1FF', color: ACCENT }}>ETB</span>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  value={plans[key]}
-                  onChange={(e) => setPlans(current => ({ ...current, [key]: e.target.value }))}
+                  value={plans[key].fee}
+                  onChange={(e) => setPlans(current => ({ ...current, [key]: { ...current[key], fee: e.target.value } }))}
                   disabled={loading || saving}
                   placeholder="0.00"
                   className="w-full px-3 py-3 text-sm outline-none bg-white"
