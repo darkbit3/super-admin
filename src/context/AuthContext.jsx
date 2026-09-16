@@ -10,9 +10,16 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const isAuth = localStorage.getItem('sa_auth')
     if (!isAuth) { setLoading(false); return }
+
     authApi.getMe()
       .then(data => setAdmin(data))
-      .catch(() => setAdmin(null))
+      .catch(() => {
+        // Token invalid/expired — clear stale auth and let user log in again
+        localStorage.removeItem('sa_auth')
+        localStorage.removeItem('sa_access_token')
+        localStorage.removeItem('sa_refresh_token')
+        setAdmin(null)
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -20,13 +27,24 @@ export function AuthProvider({ children }) {
     try {
       const data = await authApi.getMe()
       setAdmin(data)
-    } catch { setAdmin(null) }
+      return data
+    } catch {
+      setAdmin(null)
+      return null
+    }
   }
 
-  const clearAdmin = () => setAdmin(null)
+  const setAdminDirect = (data) => setAdmin(data)
+
+  const clearAdmin = () => {
+    setAdmin(null)
+    localStorage.removeItem('sa_auth')
+    localStorage.removeItem('sa_access_token')
+    localStorage.removeItem('sa_refresh_token')
+  }
 
   return (
-    <AuthContext.Provider value={{ admin, loading, refreshAdmin, clearAdmin }}>
+    <AuthContext.Provider value={{ admin, loading, refreshAdmin, setAdminDirect, clearAdmin }}>
       {children}
     </AuthContext.Provider>
   )

@@ -115,7 +115,7 @@ function LoginForm({ onForgot }) {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const toast = useToast()
-  const { refreshAdmin } = useAuth()
+  const { setAdminDirect } = useAuth()
 
   // Silently warm up the server in the background on page load
   useEffect(() => {
@@ -218,8 +218,8 @@ function LoginForm({ onForgot }) {
       : 'Invalid username or password'
 
     try {
-      const admin = await authApi.login(identifierToSend, password)
-      await refreshAdmin()
+      const adminData = await authApi.login(identifierToSend, password)
+      setAdminDirect(adminData)
       navigate(ROUTES.DASHBOARD)
     } catch (err) {
       const msg = err.message || ''

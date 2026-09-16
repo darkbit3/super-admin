@@ -64,8 +64,7 @@ async function refreshAccessToken() {
 
   if (!res.ok) {
     clearTokens()
-    window.location.replace('/')
-    throw new Error('Session ended')
+    throw new Error('Session expired. Please log in again.')
   }
 
   const data = await res.json()
@@ -102,8 +101,7 @@ async function request(path, options = {}, retry = true, refreshOnUnauthorized =
       return request(path, options, false, refreshOnUnauthorized)
     } catch {
       clearTokens()
-      window.location.replace('/')
-      return new Promise(() => {})
+      throw new Error('Session expired. Please log in again.')
     }
   }
 
