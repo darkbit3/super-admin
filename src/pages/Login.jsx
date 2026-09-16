@@ -4,6 +4,7 @@ import { ROUTES } from '../config/routes'
 import { authApi } from '../api/authApi'
 import { api, warmUp } from '../api/client'
 import { useToast } from '../context/ToastContext'
+import { useAuth } from '../context/AuthContext'
 import { Spinner } from '../components/Loaders'
 
 const ACCENT = '#7C3AED'
@@ -11,6 +12,16 @@ const DARK = '#120726'
 
 export default function Login() {
   const [tab, setTab] = useState('login') // 'login' | 'forgot'
+  const { admin, loading } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!loading && admin) {
+      navigate(ROUTES.DASHBOARD, { replace: true })
+    }
+  }, [admin, loading, navigate])
+
+  if (loading || admin) return null
 
   return (
     <div className="min-h-screen flex bg-[#F6F2FB]">
@@ -102,32 +113,15 @@ function LoginForm({ onForgot }) {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [elapsed, setElapsed] = useState(0)
-  const [serverReady, setServerReady] = useState(false)
-  const elapsedRef = useRef(null)
   const navigate = useNavigate()
   const toast = useToast()
 
-  // Warm up the server on page load (Render free tier spins down after inactivity)
+  // Silently warm up the server in the background on page load
   useEffect(() => {
     const controller = new AbortController()
-    warmUp(controller.signal).then(ok => {
-      if (!controller.signal.aborted) setServerReady(ok)
-    })
+    warmUp(controller.signal)
     return () => controller.abort()
   }, [])
-
-  // Track elapsed seconds during login so user sees progress
-  useEffect(() => {
-    if (loading) {
-      setElapsed(0)
-      elapsedRef.current = setInterval(() => setElapsed(s => s + 1), 1000)
-    } else {
-      clearInterval(elapsedRef.current)
-      setElapsed(0)
-    }
-    return () => clearInterval(elapsedRef.current)
-  }, [loading])
 
   const handleInputChange = (e) => {
     const val = e.target.value
