@@ -266,7 +266,7 @@ function LoginForm({ onForgot }) {
               inputMode={isPhoneMode ? 'numeric' : 'text'}
               value={inputValue}
               onChange={handleInputChange}
-              placeholder={isPhoneMode ? '9xxxxxxxx or 7xxxxxxxx' : 'Enter username or phone'}
+              placeholder={isPhoneMode ? '9xxxxxxxx or 7xxxxxxxx' : 'Enter username r'}
               maxLength={isPhoneMode ? 9 : undefined}
               required
               className={`flex-1 px-4 py-2.5 text-sm outline-none bg-white ${isPhoneMode ? 'font-mono tracking-wider' : ''}`}
@@ -337,6 +337,8 @@ function ForgotFlow({ onBack }) {
   const [email, setEmail] = useState('')
 
   const [emailLoading, setEmailLoading] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const [otpSecondsLeft, setOtpSecondsLeft] = useState(0)
 
   const [otp,         setOtp]       = useState('')
   const [newPass,     setNewPass]   = useState('')
@@ -346,23 +348,44 @@ function ForgotFlow({ onBack }) {
   const [otpLoading,  setOtpLoading] = useState(false)
   const toast = useToast()
 
-  const submitEmail = async (e) => {
-    e.preventDefault()
+  useEffect(() => {
+    if (resendCooldown <= 0) return undefined
+    const timer = setInterval(() => setResendCooldown(value => Math.max(0, value - 1)), 1000)
+    return () => clearInterval(timer)
+  }, [resendCooldown])
+
+  useEffect(() => {
+    if (step !== 'otp' || otpSecondsLeft <= 0) return undefined
+    const timer = setInterval(() => setOtpSecondsLeft(value => Math.max(0, value - 1)), 1000)
+    return () => clearInterval(timer)
+  }, [step, otpSecondsLeft])
+
+  const sendOtp = async () => {
     const normalizedEmail = email.trim().toLowerCase()
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    if (!/^[^\s@]+@[^ \s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       toast.error('Enter a valid email address')
       return
     }
-    setEmail(normalizedEmail); setEmailLoading(true)
+    setEmail(normalizedEmail)
+    setEmailLoading(true)
     try {
       const res = await api.post('/super-auth/forgot-password/check-email', { email: normalizedEmail }, { refreshOnUnauthorized: false })
       setDevOtp(res?.data?.otp ?? null)
+      setOtp('')
+      setOtpSecondsLeft(res?.data?.expiresInSeconds ?? 600)
+      setResendCooldown(30)
       setStep('otp')
+      toast.success('A new verification code was sent to your email')
     } catch (err) {
-      toast.error(err.message || 'Email not found. Please check and try again.')
+      toast.error(err.message || 'Unable to send verification code.')
     } finally {
       setEmailLoading(false)
     }
+  }
+
+  const submitEmail = async (e) => {
+    e.preventDefault()
+    await sendOtp()
   }
 
   const submitOtp = async (e) => {
@@ -409,6 +432,11 @@ function ForgotFlow({ onBack }) {
         <div className="mb-5">
           <h2 className="text-lg font-bold" style={{ color: DARK }}>Verification Code</h2>
           <p className="text-sm mt-1" style={{ color: '#7A6A8A' }}>Code sent to {email} — enter it below.</p>
+          <p className="text-xs mt-2 font-medium" style={{ color: otpSecondsLeft > 0 ? '#7A6A8A' : '#DC2626' }}>
+            {otpSecondsLeft > 0
+              ? `Code expires in ${Math.floor(otpSecondsLeft / 60)}:${String(otpSecondsLeft % 60).padStart(2, '0')}`
+              : 'This code has expired. Request a new code.'}
+          </p>
         </div>
 
         {devOtp && (
@@ -465,9 +493,10 @@ function ForgotFlow({ onBack }) {
           </button>
 
           <button type="button"
-            onClick={() => { setStep('email'); setOtp(''); setNewPass(''); setConfirm('') }}
-            className="w-full text-sm font-medium py-2 hover:underline" style={{ color: ACCENT }}>
-            ← Resend Code
+            onClick={sendOtp}
+            disabled={emailLoading || resendCooldown > 0}
+            className="w-full text-sm font-medium py-2 hover:underline disabled:opacity-50" style={{ color: ACCENT }}>
+            {emailLoading ? 'Sending…' : resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend Code'}
           </button>
         </form>
       </div>
