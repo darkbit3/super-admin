@@ -223,8 +223,8 @@ function StatusBadge({ status }) {
   )
 }
 
-const emptyAddForm  = { name: '', phone: '', password: '', confirmPassword: '' }
-const emptyEditForm = { name: '', phone: '' }
+const emptyAddForm  = { name: '', phone: '', email: '', password: '', confirmPassword: '' }
+const emptyEditForm = { name: '', phone: '', email: '' }
 
 // ── Main Component ─────────────────────────────────────────────────────────
 export default function Manage() {
@@ -282,6 +282,7 @@ export default function Manage() {
       const matchesSearch =
         !searchQuery ||
         (admin.name && admin.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (admin.email && admin.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (admin.phone && admin.phone.includes(searchQuery))
       const matchesStatus =
         statusFilter === 'All' || admin.status === statusFilter
@@ -309,6 +310,9 @@ export default function Manage() {
     const errs = {}
     if (!addForm.name.trim()) errs.name = 'Full name is required'
     if (!addForm.phone || addForm.phone.length !== 9) errs.phone = 'Enter a valid 9-digit number starting with 9 or 7'
+    if (addForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addForm.email.trim())) {
+      errs.email = 'Enter a valid email address'
+    }
     if (!addForm.password) errs.password = 'Password is required'
     else if (addForm.password.length < 6) errs.password = 'Minimum 6 characters'
     if (!addForm.confirmPassword) errs.confirmPassword = 'Please confirm password'
@@ -321,13 +325,23 @@ export default function Manage() {
 
     try {
       const { confirmPassword, ...rest } = addForm
-      await manageApi.create({ ...rest, phone: '0' + addForm.phone })
+      await manageApi.create({
+        ...rest,
+        phone: '0' + addForm.phone,
+        email: addForm.email && addForm.email.trim() ? addForm.email.trim() : undefined,
+      })
       await fetchAdmins()
       setShowAddModal(false)
       toast.success('Admin account created successfully')
     } catch (err) {
       const fieldErrors = getFieldErrors(err)
-      if (err.status === 409) fieldErrors.phone = err.message
+      if (err.status === 409) {
+        if (err.message && err.message.toLowerCase().includes('email')) {
+          fieldErrors.email = err.message
+        } else {
+          fieldErrors.phone = err.message
+        }
+      }
       if (Object.keys(fieldErrors).length > 0) {
         setAddErrors(fieldErrors)
       } else {
@@ -344,21 +358,35 @@ export default function Manage() {
     if (!admin) return
     setEditTarget(admin)
     const stripped = admin.phone.startsWith('0') ? admin.phone.slice(1) : admin.phone
-    setEditForm({ name: admin.name, phone: stripped })
+    setEditForm({ name: admin.name, phone: stripped, email: admin.email || '' })
     setEditErrors({})
     setShowEditModal(true)
   }
 
   const handleEdit = async () => {
     if (!editForm.name.trim() || editForm.phone.length !== 9) return
+    if (editForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email.trim())) {
+      setEditErrors({ email: 'Enter a valid email address' })
+      return
+    }
     try {
-      await manageApi.update(editTarget.id, { name: editForm.name, phone: '0' + editForm.phone })
+      await manageApi.update(editTarget.id, {
+        name: editForm.name,
+        phone: '0' + editForm.phone,
+        email: editForm.email && editForm.email.trim() ? editForm.email.trim() : null,
+      })
       await fetchAdmins()
       setShowEditModal(false)
       toast.success('Admin details updated successfully')
     } catch (err) {
       const fieldErrors = getFieldErrors(err)
-      if (err.status === 409) fieldErrors.phone = err.message
+      if (err.status === 409) {
+        if (err.message && err.message.toLowerCase().includes('email')) {
+          fieldErrors.email = err.message
+        } else {
+          fieldErrors.phone = err.message
+        }
+      }
       if (Object.keys(fieldErrors).length > 0) {
         setEditErrors(fieldErrors)
       } else {
@@ -654,6 +682,7 @@ export default function Manage() {
                         <span className="font-semibold text-sm text-slate-900 truncate">{admin.name}</span>
                         <StatusBadge status={admin.status} />
                       </div>
+                      {admin.email && <p className="text-[11px] text-slate-400 truncate mt-0.5">{admin.email}</p>}
                       <p className="text-xs font-mono text-slate-500 mt-0.5">{admin.phone}</p>
                     </div>
                   </div>
@@ -764,7 +793,10 @@ export default function Manage() {
                           >
                             {getInitials(admin.name)}
                           </div>
-                          <span className="font-semibold text-slate-900 text-sm">{admin.name}</span>
+                          <div className="min-w-0">
+                            <span className="font-semibold text-slate-900 text-sm block leading-tight truncate">{admin.name}</span>
+                            <span className="text-[11px] text-slate-400 font-normal truncate block">{admin.email || '—'}</span>
+                          </div>
                         </div>
                       </td>
 
@@ -865,6 +897,31 @@ export default function Manage() {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
+                  Email Address <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                </label>
+                <div className={`flex items-center border rounded-xl overflow-hidden transition-all bg-white ${
+                  addErrors.email
+                    ? 'border-red-400 ring-2 ring-red-100'
+                    : 'border-slate-200 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100'
+                }`}>
+                  <span className="pl-3.5 text-slate-400">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </span>
+                  <input
+                    type="email"
+                    value={addForm.email}
+                    onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))}
+                    placeholder="e.g. admin@shmeta.com"
+                    className="w-full px-3 py-2.5 text-sm outline-none bg-transparent text-slate-800 placeholder-slate-400"
+                  />
+                </div>
+                {addErrors.email && <p className="text-xs text-red-500 font-medium mt-1">{addErrors.email}</p>}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
                   Initial Password
                 </label>
                 <PasswordInput
@@ -916,7 +973,7 @@ export default function Manage() {
         <Modal onClose={() => setShowEditModal(false)}>
           <ModalPanel
             title="Edit Admin Account"
-            subtitle="Update display name and contact phone number."
+            subtitle="Update display name, contact phone, and email address."
             onClose={() => setShowEditModal(false)}
           >
             <div className="p-6 space-y-4">
@@ -946,6 +1003,31 @@ export default function Manage() {
                   onChange={v => setEditForm(f => ({ ...f, phone: v }))}
                   error={editErrors.phone}
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
+                  Email Address <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                </label>
+                <div className={`flex items-center border rounded-xl overflow-hidden transition-all bg-white ${
+                  editErrors.email
+                    ? 'border-red-400 ring-2 ring-red-100'
+                    : 'border-slate-200 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100'
+                }`}>
+                  <span className="pl-3.5 text-slate-400">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </span>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
+                    placeholder="e.g. admin@shmeta.com"
+                    className="w-full px-3 py-2.5 text-sm outline-none bg-transparent text-slate-800 placeholder-slate-400"
+                  />
+                </div>
+                {editErrors.email && <p className="text-xs text-red-500 font-medium mt-1">{editErrors.email}</p>}
               </div>
             </div>
 

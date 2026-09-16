@@ -47,6 +47,38 @@ button {
   touch-action: manipulation;
 }
 
+.loader-spinner {
+  display: inline-block;
+  flex-shrink: 0;
+  border: 2px solid rgba(124, 58, 237, 0.2);
+  border-top-color: var(--color-primary);
+  border-radius: 9999px;
+  animation: loader-spin 0.8s linear infinite;
+}
+
+.loader-skeleton {
+  display: block;
+  background: linear-gradient(100deg, #eee7f8 20%, #faf8fd 45%, #eee7f8 70%);
+  background-size: 200% 100%;
+  animation: loader-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes loader-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes loader-shimmer {
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-spinner,
+  .loader-skeleton {
+    animation: none;
+    opacity: 0.72;
+  }
+}
+
 /* Custom sleek scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
