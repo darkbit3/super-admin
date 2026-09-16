@@ -115,6 +115,7 @@ function LoginForm({ onForgot }) {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const toast = useToast()
+  const { refreshAdmin } = useAuth()
 
   // Silently warm up the server in the background on page load
   useEffect(() => {
@@ -218,7 +219,7 @@ function LoginForm({ onForgot }) {
 
     try {
       const admin = await authApi.login(identifierToSend, password)
-
+      await refreshAdmin()
       navigate(ROUTES.DASHBOARD)
     } catch (err) {
       const msg = err.message || ''
@@ -354,37 +355,10 @@ function LoginForm({ onForgot }) {
           disabled={loading}
           className="w-full mt-2 font-bold py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white shadow-lg shadow-violet-500/25 active:scale-[0.99] transition-all duration-150 disabled:opacity-80 flex items-center justify-center gap-2"
         >
-          {loading ? (
-            <>
-              <Spinner size="sm" className="border-white/30 border-t-white" />
-              <span>
-                {elapsed < 4
-                  ? 'Authenticating…'
-                  : elapsed < 12
-                  ? `Starting up… ${elapsed}s`
-                  : `Server waking up… ${elapsed}s`}
-              </span>
-            </>
-          ) : (
-            <span>Sign In to Super Admin</span>
-          )}
+          {loading
+            ? <Spinner size="sm" className="border-white/30 border-t-white" />
+            : <span>Sign In to Super Admin</span>}
         </button>
-
-        {/* Show warm-up notice after 4 seconds */}
-        {loading && elapsed >= 4 && (
-          <p className="text-center text-xs text-violet-500/80 mt-2 animate-pulse font-medium">
-            {elapsed < 12
-              ? '⚡ Server is starting up — almost ready…'
-              : '🚀 Server is waking up from sleep (free tier). This takes up to 30s once.'}
-          </p>
-        )}
-
-        {/* Server ready indicator */}
-        {!loading && serverReady && (
-          <p className="text-center text-[11px] text-emerald-600 mt-1.5 font-medium">
-            ✓ Server is ready
-          </p>
-        )}
 
       </form>
     </div>
@@ -588,18 +562,22 @@ function ForgotFlow({ onBack }) {
           <button
             type="submit"
             disabled={otpLoading}
-            className="w-full font-bold py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 text-white shadow-lg shadow-violet-500/25 transition-all disabled:opacity-60"
+            className="w-full font-bold py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 text-white shadow-lg shadow-violet-500/25 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {otpLoading ? <span className="inline-flex items-center gap-2"><Spinner size="sm" className="border-white/30 border-t-white" /> Resetting…</span> : 'Confirm New Password'}
+            {otpLoading
+              ? <Spinner size="sm" className="border-white/30 border-t-white" />
+              : 'Confirm New Password'}
           </button>
 
           <button
             type="button"
             onClick={sendOtp}
             disabled={emailLoading || resendCooldown > 0}
-            className="w-full text-xs font-semibold py-1.5 text-violet-600 hover:text-violet-800 disabled:opacity-50"
+            className="w-full text-xs font-semibold py-1.5 text-violet-600 hover:text-violet-800 disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {emailLoading ? 'Sending…' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
+            {emailLoading
+              ? <><Spinner size="sm" className="border-violet-400/30 border-t-violet-600" /></>
+              : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
           </button>
         </form>
       </div>
@@ -635,9 +613,11 @@ function ForgotFlow({ onBack }) {
         <button
           type="submit"
           disabled={emailLoading}
-          className="w-full font-bold py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 text-white shadow-lg shadow-violet-500/25 transition-all disabled:opacity-60"
+          className="w-full font-bold py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 text-white shadow-lg shadow-violet-500/25 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
         >
-          {emailLoading ? <span className="inline-flex items-center gap-2"><Spinner size="sm" className="border-white/30 border-t-white" /> Sending…</span> : 'Send Verification OTP'}
+          {emailLoading
+            ? <Spinner size="sm" className="border-white/30 border-t-white" />
+            : 'Send Verification OTP'}
         </button>
 
         <button
