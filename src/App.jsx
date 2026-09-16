@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Manage from './pages/Manage'
 import RegisterFee from './pages/RegisterFee'
+import RegistrationApprovals from './pages/RegistrationApprovals'
 import Chat from './pages/Chat'
 import History from './pages/History'
 import RouteProgress from './components/RouteProgress'
@@ -39,6 +40,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <RegisterFee />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.REGISTRATION_APPROVALS}
+          element={
+            <ProtectedRoute>
+              <RegistrationApprovals />
             </ProtectedRoute>
           }
         />
