@@ -64,7 +64,6 @@ function LoginForm({ onForgot }) {
   const [isPhoneMode, setIsPhoneMode]   = useState(false)
   const [password, setPassword]         = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError]               = useState('')
   const [loading, setLoading]           = useState(false)
   const navigate = useNavigate()
   const toast = useToast()
@@ -154,7 +153,6 @@ function LoginForm({ onForgot }) {
     const loginInput = inputValue.trim()
     if (!loginInput) {
       const emptyMsg = isPhoneMode ? 'Please enter your phone number' : 'Please enter your username or phone number'
-      setError(emptyMsg)
       toast?.error?.(emptyMsg)
       return
     }
@@ -162,13 +160,11 @@ function LoginForm({ onForgot }) {
     if (isPhoneMode) {
       if (loginInput.length !== 9 || (loginInput[0] !== '9' && loginInput[0] !== '7')) {
         const phoneFormatMsg = 'Phone number must start with 9 or 7 and be exactly 9 digits'
-        setError(phoneFormatMsg)
         toast?.error?.(phoneFormatMsg)
         return
       }
     }
 
-    setError('')
     setLoading(true)
 
     // Formatted phone for phone mode (09xxxxxxxx)
@@ -190,7 +186,6 @@ function LoginForm({ onForgot }) {
 
         if (!matchesExactCase) {
           await authApi.logout().catch(() => {})
-          setError('Invalid username or password')
           toast?.error?.('Invalid username or password')
           return
         }
@@ -209,7 +204,6 @@ function LoginForm({ onForgot }) {
         /credentials/i.test(msg)
 
       const finalError = isAuthError ? expectedAuthError : (msg || expectedAuthError)
-      setError(finalError)
       toast?.error?.(finalError)
     } finally {
       setLoading(false)
@@ -223,10 +217,6 @@ function LoginForm({ onForgot }) {
         <p className="text-sm mt-1" style={{ color: '#7A6A8A' }}>Enter your credentials to access full control.</p>
       </div>
 
-      {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">{error}</div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <div className="flex items-center justify-between mb-1.5">
@@ -238,7 +228,6 @@ function LoginForm({ onForgot }) {
               onClick={() => {
                 setIsPhoneMode(!isPhoneMode)
                 setInputValue('')
-                setError('')
               }}
               className="text-xs font-semibold hover:underline"
               style={{ color: ACCENT }}
@@ -266,7 +255,7 @@ function LoginForm({ onForgot }) {
               inputMode={isPhoneMode ? 'numeric' : 'text'}
               value={inputValue}
               onChange={handleInputChange}
-              placeholder={isPhoneMode ? '9xxxxxxxx or 7xxxxxxxx' : 'Enter username r'}
+              placeholder={isPhoneMode ? '9xxxxxxxx or 7xxxxxxxx' : 'Enter username '}
               maxLength={isPhoneMode ? 9 : undefined}
               required
               className={`flex-1 px-4 py-2.5 text-sm outline-none bg-white ${isPhoneMode ? 'font-mono tracking-wider' : ''}`}
