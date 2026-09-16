@@ -7,10 +7,12 @@ import Manage from './pages/Manage'
 import RegisterFee from './pages/RegisterFee'
 import Chat from './pages/Chat'
 import History from './pages/History'
+import RouteProgress from './components/RouteProgress'
 
 export default function App() {
   return (
     <BrowserRouter>
+      <RouteProgress />
       <Routes>
         {/* Public */}
         <Route path={ROUTES.LOGIN} element={<Login />} />

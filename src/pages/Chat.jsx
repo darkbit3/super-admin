@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Layout from '../components/Layout'
 import { api } from '../api/client'
+import { ListSkeleton, MessageSkeleton, Spinner } from '../components/Loaders'
 
 const palette = [
   '#7C3AED', '#6366F1', '#10B981', '#0EA5E9', '#F59E0B', '#EC4899', '#8B5CF6'
@@ -543,13 +544,7 @@ export default function Chat() {
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 min-h-0 bg-gradient-to-b from-purple-50/20 to-white">
             {(selectedGroup ? loadingGroupMessages : loadingMessages) ? (
-              <div className="flex items-center justify-center gap-2 text-xs py-10 text-slate-400">
-                <svg className="w-4 h-4 animate-spin text-violet-600" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                </svg>
-                <span>Loading message history…</span>
-              </div>
+              <MessageSkeleton />
             ) : activeMessages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-3 py-16 text-center">
                 <div className="w-14 h-14 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center">
@@ -619,10 +614,7 @@ export default function Chat() {
                 style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)' }}
               >
                 {sending ? (
-                  <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                  </svg>
+                  <Spinner size="sm" className="border-white/30 border-t-white" />
                 ) : (
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -707,13 +699,7 @@ export default function Chat() {
         )}
 
         {loadingPeople ? (
-          <div className="flex items-center justify-center gap-2 p-8 text-xs text-slate-400">
-            <svg className="w-4 h-4 animate-spin text-violet-600" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-            </svg>
-            <span>Loading contacts…</span>
-          </div>
+          <div className="p-2"><ListSkeleton count={5} /></div>
         ) : filteredPeople.length === 0 ? (
           <div className="p-8 text-center text-xs text-slate-400">No contacts found</div>
         ) : (

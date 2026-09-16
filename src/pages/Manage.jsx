@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import Layout from '../components/Layout'
 import { manageApi } from '../api/manageApi'
 import { useToast } from '../context/ToastContext'
+import { Spinner, TableSkeletonRows, ListSkeleton } from '../components/Loaders'
 
 // ── Icons ──────────────────────────────────────────────────────────────────
 const EyeOn = () => (
@@ -46,8 +47,8 @@ const IconToggleOff = () => (
     <path d="M17 7H7a5 5 0 000 10h10a5 5 0 000-10zm-10 8a3 3 0 110-6 3 3 0 010 6z"/>
   </svg>
 )
-const IconRefresh = ({ spinning }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ${spinning ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+const IconRefresh = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
   </svg>
 )
@@ -144,7 +145,7 @@ function ConfirmDeleteModal({ message, subMessage, onConfirm, onCancel, loading 
             disabled={loading}
             className="flex-1 px-4 py-2.5 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all shadow-md shadow-red-500/20 disabled:opacity-50"
           >
-            {loading ? 'Deleting…' : 'Yes, Delete'}
+              {loading ? <span className="inline-flex items-center gap-2"><Spinner size="sm" className="border-white/30 border-t-white" /> Deleting…</span> : 'Yes, Delete'}
           </button>
         </div>
       </div>
@@ -508,7 +509,7 @@ export default function Manage() {
             aria-label="Refresh admins list"
             className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl border border-purple-200/80 bg-white/80 hover:bg-white text-slate-700 shadow-sm transition-all active:scale-95 disabled:opacity-50"
           >
-            <IconRefresh spinning={loading} />
+            {loading ? <Spinner size="sm" /> : <IconRefresh />}
             <span className="hidden sm:inline">{loading ? 'Updating…' : 'Refresh'}</span>
           </button>
 
@@ -634,17 +635,7 @@ export default function Manage() {
       {/* ── Mobile View: Cards ────────────────────────────────────────────── */}
       <div className="lg:hidden space-y-3">
         {loading ? (
-          [1, 2, 3].map(i => (
-            <div key={i} className="bg-white rounded-2xl p-4 border border-purple-100 shadow-sm animate-pulse space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-purple-100" />
-                <div className="space-y-1.5 flex-1">
-                  <div className="h-3 w-3/4 bg-purple-100 rounded" />
-                  <div className="h-2.5 w-1/2 bg-purple-50 rounded" />
-                </div>
-              </div>
-            </div>
-          ))
+          <div className="bg-white rounded-2xl border border-purple-100 p-2"><ListSkeleton count={4} /></div>
         ) : filteredAdmins.length === 0 ? (
           <div className="bg-white rounded-2xl p-10 text-center border border-purple-100">
             <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-purple-400">
@@ -751,14 +742,7 @@ export default function Manage() {
             </thead>
             <tbody className="divide-y divide-purple-50">
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-400">
-                    <div className="flex items-center justify-center gap-2">
-                      <IconRefresh spinning={true} />
-                      <span>Loading administrator directory…</span>
-                    </div>
-                  </td>
-                </tr>
+                <TableSkeletonRows count={6} columns={6} />
               ) : filteredAdmins.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-12 text-slate-400">

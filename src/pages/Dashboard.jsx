@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { manageApi } from '../api/manageApi'
 import { useToast } from '../context/ToastContext'
 import { ROUTES } from '../config/routes'
+import { Spinner, StatCardSkeleton, TableSkeletonRows, ListSkeleton } from '../components/Loaders'
 
 const cardDefs = [
   {
@@ -86,8 +87,8 @@ const cardDefs = [
   },
 ]
 
-const IconRefresh = ({ spinning }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ${spinning ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+const IconRefresh = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
   </svg>
 )
@@ -147,7 +148,7 @@ export default function Dashboard() {
             disabled={loading}
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-purple-900 bg-white hover:bg-purple-50 transition-all border border-purple-200/80 shadow-xs disabled:opacity-50"
           >
-            <IconRefresh spinning={loading} />
+            {loading ? <Spinner size="sm" /> : <IconRefresh />}
             <span>{loading ? 'Refreshing…' : 'Refresh Data'}</span>
           </button>
         </div>
@@ -162,7 +163,7 @@ export default function Dashboard() {
 
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3.5 sm:gap-4 mb-8">
-        {cardDefs.map((card) => (
+        {loading ? cardDefs.map(card => <StatCardSkeleton key={card.key} />) : cardDefs.map((card) => (
           <div
             key={card.key}
             className={`card-hover relative bg-gradient-to-br ${card.color} bg-white rounded-2xl p-4 sm:p-5 border ${card.borderColor} shadow-sm overflow-hidden`}
@@ -175,11 +176,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-2xl sm:text-3xl font-extrabold font-display text-[#120726]">
-                {loading ? (
-                  <span className="inline-block w-12 h-7 rounded-lg bg-purple-200/50 animate-pulse" />
-                ) : (
-                  stats?.[card.key] ?? 0
-                )}
+                {stats?.[card.key] ?? 0}
               </p>
               <p className="text-[10px] text-purple-900/50 font-medium truncate mt-1">{card.subtext}</p>
             </div>
@@ -198,7 +195,7 @@ export default function Dashboard() {
           </div>
           <div className="divide-y divide-purple-50">
             {loading ? (
-              <div className="p-4 text-xs text-purple-400 font-medium">Loading details…</div>
+              <div className="p-2"><ListSkeleton count={3} /></div>
             ) : !stats?.adminsBreakdown?.length ? (
               <div className="p-4 text-xs text-purple-400 font-medium">No admin accounts registered yet.</div>
             ) : (
@@ -235,7 +232,7 @@ export default function Dashboard() {
           </div>
           <div className="divide-y divide-purple-50">
             {loading ? (
-              <div className="p-4 text-xs text-purple-400 font-medium">Loading details…</div>
+              <div className="p-2"><ListSkeleton count={3} /></div>
             ) : !stats?.ownersBreakdown?.length ? (
               <div className="p-4 text-xs text-purple-400 font-medium">No owner accounts registered yet.</div>
             ) : (
@@ -294,12 +291,7 @@ export default function Dashboard() {
             </thead>
             <tbody className="divide-y divide-purple-100/60">
               {loading ? (
-                <tr>
-                  <td colSpan={8} className="text-center py-12 text-purple-400 font-medium">
-                    <span className="inline-block w-5 h-5 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin mr-2 align-middle" />
-                    Fetching admin accounts…
-                  </td>
-                </tr>
+                <TableSkeletonRows count={5} columns={8} />
               ) : !stats?.adminsBreakdown || stats.adminsBreakdown.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-12 text-purple-400 font-medium">
@@ -391,12 +383,7 @@ export default function Dashboard() {
             </thead>
             <tbody className="divide-y divide-purple-100/60">
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-12 text-purple-400 font-medium">
-                    <span className="inline-block w-5 h-5 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin mr-2 align-middle" />
-                    Fetching business owners…
-                  </td>
-                </tr>
+                <TableSkeletonRows count={5} columns={6} />
               ) : !stats?.ownersBreakdown || stats.ownersBreakdown.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-12 text-purple-400 font-medium">

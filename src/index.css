@@ -63,6 +63,16 @@ button {
   animation: loader-shimmer 1.5s ease-in-out infinite;
 }
 
+.route-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 3px;
+  z-index: 10000;
+  background: linear-gradient(90deg, #7C3AED, #A78BFA, #7C3AED);
+  background-size: 200% 100%;
+  animation: route-progress 0.38s ease-out forwards;
+}
+
 @keyframes loader-spin {
   to { transform: rotate(360deg); }
 }
@@ -71,9 +81,15 @@ button {
   to { background-position: -200% 0; }
 }
 
+@keyframes route-progress {
+  from { transform: scaleX(0); transform-origin: left; opacity: 0.7; }
+  to { transform: scaleX(1); transform-origin: left; opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .loader-spinner,
-  .loader-skeleton {
+  .loader-skeleton,
+  .route-progress {
     animation: none;
     opacity: 0.72;
   }

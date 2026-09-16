@@ -4,6 +4,7 @@ import { ROUTES } from '../config/routes'
 import { authApi } from '../api/authApi'
 import { api } from '../api/client'
 import { useToast } from '../context/ToastContext'
+import { Spinner } from '../components/Loaders'
 
 const ACCENT = '#7C3AED'
 const DARK = '#120726'
@@ -355,7 +356,7 @@ function LoginForm({ onForgot }) {
         >
           {loading ? (
             <>
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <Spinner size="sm" className="border-white/30 border-t-white" />
               <span>Authenticating…</span>
             </>
           ) : (
@@ -566,7 +567,7 @@ function ForgotFlow({ onBack }) {
             disabled={otpLoading}
             className="w-full font-bold py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 text-white shadow-lg shadow-violet-500/25 transition-all disabled:opacity-60"
           >
-            {otpLoading ? 'Resetting…' : 'Confirm New Password'}
+            {otpLoading ? <span className="inline-flex items-center gap-2"><Spinner size="sm" className="border-white/30 border-t-white" /> Resetting…</span> : 'Confirm New Password'}
           </button>
 
           <button
@@ -613,7 +614,7 @@ function ForgotFlow({ onBack }) {
           disabled={emailLoading}
           className="w-full font-bold py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 text-white shadow-lg shadow-violet-500/25 transition-all disabled:opacity-60"
         >
-          {emailLoading ? 'Sending…' : 'Send Verification OTP'}
+          {emailLoading ? <span className="inline-flex items-center gap-2"><Spinner size="sm" className="border-white/30 border-t-white" /> Sending…</span> : 'Send Verification OTP'}
         </button>
 
         <button

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { manageApi } from '../api/manageApi'
 import { useToast } from '../context/ToastContext'
+import { Spinner } from '../components/Loaders'
 
 const PLAN_DEFS = [
   { key: 'oneMonth', label: '1 Month Plan', sub: 'Standard single month access with full portal features', months: 1 },
@@ -100,9 +101,9 @@ export default function RegisterFee() {
             disabled={loading || saving}
             className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl border border-purple-200/80 bg-white/80 hover:bg-white text-slate-700 shadow-sm transition-all active:scale-95 disabled:opacity-50"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            {loading ? <Spinner size="sm" /> : <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+            </svg>}
             <span>{loading ? 'Refreshing…' : 'Refresh'}</span>
           </button>
 
@@ -115,10 +116,7 @@ export default function RegisterFee() {
           >
             {saving ? (
               <>
-                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                </svg>
+                <Spinner size="sm" className="border-white/30 border-t-white" />
                 <span>Saving Changes…</span>
               </>
             ) : (
