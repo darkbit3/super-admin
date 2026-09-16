@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import Layout from '../components/Layout'
 import { manageApi } from '../api/manageApi'
 import { useToast } from '../context/ToastContext'
@@ -16,22 +16,22 @@ const EyeOff = () => (
   </svg>
 )
 const IconAdd = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
   </svg>
 )
 const IconEdit = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828A2 2 0 0110.414 16H8v-2.414a2 2 0 01.586-1.414z" />
   </svg>
 )
 const IconDelete = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0a1 1 0 00-1-1h-4a1 1 0 00-1 1m-4 0h10" />
   </svg>
 )
 const IconKey = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-4.418 0-8 1.79-8 4v1h16v-1c0-2.21-3.582-4-8-4z" />
     <path strokeLinecap="round" strokeLinejoin="round" d="M17 11h4m-2-2v4" />
   </svg>
@@ -51,14 +51,25 @@ const IconRefresh = ({ spinning }) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
   </svg>
 )
+const IconSearch = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+)
+const IconShield = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+  </svg>
+)
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-const ACCENT = '#7C3AED'
-
 function fmtDate(iso) {
   if (!iso) return '—'
-  try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }
-  catch { return iso }
+  try {
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  } catch {
+    return iso
+  }
 }
 
 function getFieldErrors(error) {
@@ -69,6 +80,11 @@ function getFieldErrors(error) {
   return fieldErrors
 }
 
+function getInitials(name) {
+  if (!name) return 'A'
+  return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+}
+
 // ── Modal wrapper ──────────────────────────────────────────────────────────
 function Modal({ onClose, children }) {
   const overlayRef = useRef(null)
@@ -76,18 +92,29 @@ function Modal({ onClose, children }) {
     <div
       ref={overlayRef}
       onClick={e => { if (e.target === overlayRef.current) onClose() }}
-      className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all duration-200"
     >
       {children}
     </div>
   )
 }
 
-function ModalPanel({ children }) {
+function ModalPanel({ children, title, subtitle, onClose }) {
   return (
-    <div className="bg-white w-full sm:max-w-md sm:rounded-2xl shadow-xl overflow-y-auto"
-      style={{ maxHeight: '95dvh', borderRadius: '1rem 1rem 0 0' }}>
-      {children}
+    <div className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden border border-purple-100 flex flex-col max-h-[92dvh] animate-in fade-in zoom-in-95 duration-150">
+      <div className="px-6 py-4 border-b border-purple-100/70 flex items-center justify-between bg-gradient-to-r from-purple-50/50 to-white">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900 font-heading">{title}</h2>
+          {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+        </div>
+        <button
+          onClick={onClose}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+        >
+          ✕
+        </button>
+      </div>
+      <div className="overflow-y-auto flex-1">{children}</div>
     </div>
   )
 }
@@ -96,28 +123,31 @@ function ModalPanel({ children }) {
 function ConfirmDeleteModal({ message, subMessage, onConfirm, onCancel, loading }) {
   return (
     <Modal onClose={onCancel}>
-      <ModalPanel>
-        <div className="p-6 text-center">
-          <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0a1 1 0 00-1-1h-4a1 1 0 00-1 1m-4 0h10" />
-            </svg>
-          </div>
-          <h2 className="text-lg font-bold text-gray-800 mb-1">{message}</h2>
-          {subMessage && <p className="text-sm text-gray-500 mb-6">{subMessage}</p>}
-          {!subMessage && <div className="mb-6" />}
-          <div className="flex gap-3">
-            <button onClick={onCancel} disabled={loading}
-              className="flex-1 px-4 py-3 text-sm border border-gray-300 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 min-h-[44px]">
-              Cancel
-            </button>
-            <button onClick={onConfirm} disabled={loading}
-              className="flex-1 px-4 py-3 text-sm bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 min-h-[44px]">
-              {loading ? 'Deleting…' : 'Yes, Delete'}
-            </button>
-          </div>
+      <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden border border-red-100 p-6 text-center animate-in fade-in zoom-in-95 duration-150">
+        <div className="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-100 shadow-inner">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0a1 1 0 00-1-1h-4a1 1 0 00-1 1m-4 0h10" />
+          </svg>
         </div>
-      </ModalPanel>
+        <h2 className="text-lg font-bold text-slate-900 mb-1.5">{message}</h2>
+        {subMessage && <p className="text-xs text-slate-500 mb-6 leading-relaxed">{subMessage}</p>}
+        <div className="flex gap-3 mt-4">
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 text-sm font-medium border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all shadow-md shadow-red-500/20 disabled:opacity-50"
+          >
+            {loading ? 'Deleting…' : 'Yes, Delete'}
+          </button>
+        </div>
+      </div>
     </Modal>
   )
 }
@@ -132,40 +162,62 @@ function PhoneInput({ value, onChange, error }) {
     onChange(raw)
   }
   return (
-    <>
-      <div className={`flex items-center border rounded-xl overflow-hidden ${error ? 'border-red-400' : 'border-gray-300'}`}>
-        <span className="px-3 py-3 bg-gray-50 text-gray-500 text-sm font-medium border-r border-gray-300 select-none">0</span>
-        <input type="tel" value={value} onChange={handleChange}
-          placeholder="9xxxxxxxx  or  7xxxxxxxx" inputMode="numeric" maxLength={9}
-          className="flex-1 px-3 py-3 text-sm outline-none bg-white min-h-[44px]" />
+    <div>
+      <div className={`flex items-center border rounded-xl overflow-hidden transition-all bg-white ${error ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100'}`}>
+        <span className="px-3.5 py-2.5 bg-slate-50 text-slate-600 text-xs font-semibold border-r border-slate-200 select-none flex items-center gap-1">
+          <span className="text-slate-400">ETH</span> 0
+        </span>
+        <input
+          type="tel"
+          value={value}
+          onChange={handleChange}
+          placeholder="9xxxxxxxx or 7xxxxxxxx"
+          inputMode="numeric"
+          maxLength={9}
+          className="flex-1 px-3 py-2.5 text-sm outline-none bg-transparent text-slate-800 placeholder-slate-400"
+        />
       </div>
-      <p className="text-xs text-gray-400 mt-1">Format: 09xxxxxxxxx or 07xxxxxxxxx</p>
-      {error && <p className="text-xs text-red-500 mt-0.5">{error}</p>}
-    </>
+      <p className="text-[11px] text-slate-400 mt-1">Ethiopian mobile format: 09... or 07... (9 digits)</p>
+      {error && <p className="text-xs text-red-500 font-medium mt-1">{error}</p>}
+    </div>
   )
 }
 
 // ── Password field ─────────────────────────────────────────────────────────
-function PasswordInput({ value, onChange, show, onToggle, error }) {
+function PasswordInput({ value, onChange, show, onToggle, error, placeholder = "••••••••" }) {
   return (
-    <>
-      <div className={`flex items-center border rounded-xl overflow-hidden ${error ? 'border-red-400' : 'border-gray-300'}`}>
-        <input type={show ? 'text' : 'password'} value={value} onChange={onChange}
-          placeholder="••••••••" className="flex-1 px-3 py-3 text-sm outline-none bg-white min-h-[44px]" />
-        <button type="button" onClick={onToggle}
-          className="px-3 text-gray-400 hover:text-gray-600 min-w-[44px] min-h-[44px] flex items-center justify-center">
+    <div>
+      <div className={`flex items-center border rounded-xl overflow-hidden transition-all bg-white ${error ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100'}`}>
+        <input
+          type={show ? 'text' : 'password'}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          className="flex-1 px-3.5 py-2.5 text-sm outline-none bg-transparent text-slate-800 placeholder-slate-400"
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="px-3 text-slate-400 hover:text-slate-600 transition-colors"
+        >
           {show ? <EyeOff /> : <EyeOn />}
         </button>
       </div>
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-    </>
+      {error && <p className="text-xs text-red-500 font-medium mt-1">{error}</p>}
+    </div>
   )
 }
 
 // ── Status badge ───────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
+  const isActive = status === 'Active'
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-500'}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+      isActive
+        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+        : 'bg-slate-100 text-slate-600 border border-slate-200'
+    }`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
       {status}
     </span>
   )
@@ -174,13 +226,16 @@ function StatusBadge({ status }) {
 const emptyAddForm  = { name: '', phone: '', password: '', confirmPassword: '' }
 const emptyEditForm = { name: '', phone: '' }
 
-// ── Main component ─────────────────────────────────────────────────────────
+// ── Main Component ─────────────────────────────────────────────────────────
 export default function Manage() {
   const toast = useToast()
-  const [admins, setAdmins]           = useState([])
-  const [loading, setLoading]         = useState(true)
-  const [apiError, setApiError]       = useState('')
-  const [selected, setSelected]       = useState([])
+  const [admins, setAdmins]                 = useState([])
+  const [loading, setLoading]               = useState(true)
+  const [apiError, setApiError]             = useState('')
+  const [selected, setSelected]             = useState([])
+  const [searchQuery, setSearchQuery]       = useState('')
+  const [statusFilter, setStatusFilter]     = useState('All')
+
   const [showAddModal,   setShowAddModal]   = useState(false)
   const [showEditModal,  setShowEditModal]  = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
@@ -192,9 +247,9 @@ export default function Manage() {
   const [showAddPwd,     setShowAddPwd]     = useState(false)
   const [showAddConfirm, setShowAddConfirm] = useState(false)
 
-  const [editForm,   setEditForm]   = useState(emptyEditForm)
-  const [editErrors, setEditErrors] = useState({})
-  const [editTarget, setEditTarget] = useState(null)
+  const [editForm,       setEditForm]       = useState(emptyEditForm)
+  const [editErrors,     setEditErrors]     = useState({})
+  const [editTarget,     setEditTarget]     = useState(null)
 
   const [resetTargetIds,   setResetTargetIds]   = useState([])
   const [resetForm,        setResetForm]         = useState({ password: '', confirmPassword: '' })
@@ -204,49 +259,80 @@ export default function Manage() {
 
   // ── Fetch ────────────────────────────────────────────────────────────────
   const fetchAdmins = useCallback(async () => {
-    setLoading(true); setApiError('')
+    setLoading(true)
+    setApiError('')
     try {
       const data = await manageApi.getAll()
-      setAdmins(data)
+      setAdmins(data || [])
     } catch (err) {
       setApiError(err.message || 'Failed to load admins')
       toast.error(err.message || 'Failed to load admins')
-    } finally { setLoading(false) }
+    } finally {
+      setLoading(false)
+    }
   }, [toast])
 
-  useEffect(() => { fetchAdmins() }, [fetchAdmins])
+  useEffect(() => {
+    fetchAdmins()
+  }, [fetchAdmins])
+
+  // ── Filtered Admins ──────────────────────────────────────────────────────
+  const filteredAdmins = useMemo(() => {
+    return admins.filter(admin => {
+      const matchesSearch =
+        !searchQuery ||
+        (admin.name && admin.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (admin.phone && admin.phone.includes(searchQuery))
+      const matchesStatus =
+        statusFilter === 'All' || admin.status === statusFilter
+      return matchesSearch && matchesStatus
+    })
+  }, [admins, searchQuery, statusFilter])
 
   const selCount    = selected.length
-  const allChecked  = admins.length > 0 && admins.every(a => selected.includes(a.id))
-  const someChecked = admins.some(a => selected.includes(a.id))
+  const allChecked  = filteredAdmins.length > 0 && filteredAdmins.every(a => selected.includes(a.id))
+  const someChecked = filteredAdmins.some(a => selected.includes(a.id))
 
   const toggleRow = (id) => setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id])
-  const toggleAll = () => setSelected(allChecked ? [] : admins.map(a => a.id))
+  const toggleAll = () => setSelected(allChecked ? [] : filteredAdmins.map(a => a.id))
 
   // ── Add ──────────────────────────────────────────────────────────────────
   const openAdd = () => {
-    setAddForm(emptyAddForm); setAddErrors({})
-    setShowAddPwd(false); setShowAddConfirm(false); setShowAddModal(true)
+    setAddForm(emptyAddForm)
+    setAddErrors({})
+    setShowAddPwd(false)
+    setShowAddConfirm(false)
+    setShowAddModal(true)
   }
+
   const handleAdd = async () => {
     const errs = {}
-    if (!addForm.name) errs.name = 'Name is required'
-    if (!addForm.phone || addForm.phone.length !== 9) errs.phone = 'Enter a valid 10-digit number (09/07)'
+    if (!addForm.name.trim()) errs.name = 'Full name is required'
+    if (!addForm.phone || addForm.phone.length !== 9) errs.phone = 'Enter a valid 9-digit number starting with 9 or 7'
     if (!addForm.password) errs.password = 'Password is required'
     else if (addForm.password.length < 6) errs.password = 'Minimum 6 characters'
     if (!addForm.confirmPassword) errs.confirmPassword = 'Please confirm password'
     else if (addForm.password !== addForm.confirmPassword) errs.confirmPassword = 'Passwords do not match'
-    if (Object.keys(errs).length > 0) { setAddErrors(errs); return }
+
+    if (Object.keys(errs).length > 0) {
+      setAddErrors(errs)
+      return
+    }
+
     try {
       const { confirmPassword, ...rest } = addForm
       await manageApi.create({ ...rest, phone: '0' + addForm.phone })
-      await fetchAdmins(); setShowAddModal(false)
-      toast.success('Admin created successfully')
+      await fetchAdmins()
+      setShowAddModal(false)
+      toast.success('Admin account created successfully')
     } catch (err) {
       const fieldErrors = getFieldErrors(err)
       if (err.status === 409) fieldErrors.phone = err.message
-      if (Object.keys(fieldErrors).length > 0) setAddErrors(fieldErrors)
-      else toast.error(err.message)
+      if (Object.keys(fieldErrors).length > 0) {
+        setAddErrors(fieldErrors)
+      } else {
+        toast.error(err.message)
+      }
     }
   }
 
@@ -255,23 +341,29 @@ export default function Manage() {
     const id = adminId ?? (selCount === 1 ? selected[0] : null)
     if (!id) return
     const admin = admins.find(a => a.id === id)
+    if (!admin) return
     setEditTarget(admin)
     const stripped = admin.phone.startsWith('0') ? admin.phone.slice(1) : admin.phone
     setEditForm({ name: admin.name, phone: stripped })
     setEditErrors({})
     setShowEditModal(true)
   }
+
   const handleEdit = async () => {
-    if (!editForm.name || editForm.phone.length !== 9) return
+    if (!editForm.name.trim() || editForm.phone.length !== 9) return
     try {
       await manageApi.update(editTarget.id, { name: editForm.name, phone: '0' + editForm.phone })
-      await fetchAdmins(); setShowEditModal(false)
-      toast.success('Admin updated successfully')
+      await fetchAdmins()
+      setShowEditModal(false)
+      toast.success('Admin details updated successfully')
     } catch (err) {
       const fieldErrors = getFieldErrors(err)
       if (err.status === 409) fieldErrors.phone = err.message
-      if (Object.keys(fieldErrors).length > 0) setEditErrors(fieldErrors)
-      else toast.error(err.message)
+      if (Object.keys(fieldErrors).length > 0) {
+        setEditErrors(fieldErrors)
+      } else {
+        toast.error(err.message)
+      }
     }
   }
 
@@ -282,19 +374,25 @@ export default function Manage() {
       ids,
       message: `Delete ${ids.length} admin${ids.length > 1 ? 's' : ''}?`,
       subMessage: ids.length === 1
-        ? `"${names[0]}" will be permanently removed.`
+        ? `"${names[0]}" will be permanently revoked and deleted from the platform.`
         : `${names.slice(0, 3).join(', ')}${names.length > 3 ? ` and ${names.length - 3} more` : ''} will be permanently removed.`,
     })
   }
+
   const handleConfirmDelete = async () => {
     if (!confirmDelete) return
     setDeleteLoading(true)
     try {
       await manageApi.bulkDelete(confirmDelete.ids)
-      await fetchAdmins(); setSelected([]); setConfirmDelete(null)
-      toast.success(`${confirmDelete.ids.length} admin(s) deleted`)
-    } catch (err) { toast.error(err.message) }
-    finally { setDeleteLoading(false) }
+      await fetchAdmins()
+      setSelected([])
+      setConfirmDelete(null)
+      toast.success(`${confirmDelete.ids.length} admin(s) deleted successfully`)
+    } catch (err) {
+      toast.error(err.message)
+    } finally {
+      setDeleteLoading(false)
+    }
   }
 
   // ── Status toggle ────────────────────────────────────────────────────────
@@ -303,134 +401,296 @@ export default function Manage() {
     try {
       await manageApi.updateStatus(admin.id, newStatus)
       await fetchAdmins()
-      toast.success(`${admin.name} set to ${newStatus}`)
+      toast.success(`${admin.name} is now ${newStatus}`)
     } catch (err) {
-      const fieldErrors = getFieldErrors(err)
-      if (Object.keys(fieldErrors).length > 0) setResetErrors(fieldErrors)
-      else toast.error(err.message)
+      toast.error(err.message)
     }
   }
+
   const handleToggleSelected = async () => {
     if (selCount === 0) return
     const allActive = selected.every(id => admins.find(a => a.id === id)?.status === 'Active')
     const newStatus = allActive ? 'Inactive' : 'Active'
     try {
-      await manageApi.bulkStatus(selected, newStatus); await fetchAdmins()
+      await manageApi.bulkStatus(selected, newStatus)
+      await fetchAdmins()
       toast.success(`${selCount} admin(s) set to ${newStatus}`)
-    } catch (err) { toast.error(err.message) }
+    } catch (err) {
+      toast.error(err.message)
+    }
   }
+
   const selectedAllActive = selCount > 0 && selected.every(id => admins.find(a => a.id === id)?.status === 'Active')
 
   // ── Reset password ───────────────────────────────────────────────────────
   const openReset = (ids) => {
     setResetTargetIds(ids)
     setResetForm({ password: '', confirmPassword: '' })
-    setResetErrors({}); setShowResetPwd(false); setShowResetConfirm(false); setShowResetModal(true)
+    setResetErrors({})
+    setShowResetPwd(false)
+    setShowResetConfirm(false)
+    setShowResetModal(true)
   }
+
   const handleResetSave = async () => {
     const errs = {}
     if (!resetForm.password) errs.password = 'Password is required'
     else if (resetForm.password.length < 6) errs.password = 'Minimum 6 characters'
     if (!resetForm.confirmPassword) errs.confirmPassword = 'Please confirm password'
     else if (resetForm.password !== resetForm.confirmPassword) errs.confirmPassword = 'Passwords do not match'
-    if (Object.keys(errs).length > 0) { setResetErrors(errs); return }
+
+    if (Object.keys(errs).length > 0) {
+      setResetErrors(errs)
+      return
+    }
+
     try {
       await manageApi.bulkResetPassword(resetTargetIds, resetForm.password)
-      await fetchAdmins(); setShowResetModal(false); setSelected([])
+      await fetchAdmins()
+      setShowResetModal(false)
+      setSelected([])
       toast.success(`Password reset for ${resetTargetIds.length} admin(s)`)
-    } catch (err) { toast.error(err.message) }
+    } catch (err) {
+      toast.error(err.message)
+    }
   }
 
   return (
     <Layout>
-      {/* Header */}
-      <div className="mb-4 flex items-center justify-between gap-3">
+      {/* ── Page Header ───────────────────────────────────────────────────── */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold" style={{ color: '#1A0A2E', fontFamily: 'Georgia, serif' }}>Manage Admins</h1>
-          <p className="text-sm mt-0.5" style={{ color: '#7A6A8A' }}>
-            {admins.length} total · {admins.filter(a => a.status === 'Active').length} active
-            {selCount > 0 && <span className="ml-2 font-semibold" style={{ color: ACCENT }}>· {selCount} selected</span>}
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 rounded-lg bg-violet-100 text-violet-700">
+              <IconShield />
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-bold font-heading text-slate-900 tracking-tight">
+              Manage Admins
+            </h1>
+          </div>
+          <p className="text-sm text-slate-500 mt-1">
+            Configure administrative permissions, invite portal managers, and control active status.
           </p>
         </div>
-        <button onClick={fetchAdmins} disabled={loading} aria-label="Reload"
-          className="flex items-center justify-center gap-1.5 rounded-xl border transition-colors disabled:opacity-50 w-11 h-11 sm:w-auto sm:h-auto sm:px-3 sm:py-2"
-          style={{ backgroundColor: 'white', borderColor: '#DDD0F0', color: '#3A2A4A' }}>
-          <IconRefresh spinning={loading} />
-          <span className="hidden sm:inline text-sm font-medium">{loading ? 'Loading…' : 'Reload'}</span>
-        </button>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={fetchAdmins}
+            disabled={loading}
+            aria-label="Refresh admins list"
+            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl border border-purple-200/80 bg-white/80 hover:bg-white text-slate-700 shadow-sm transition-all active:scale-95 disabled:opacity-50"
+          >
+            <IconRefresh spinning={loading} />
+            <span className="hidden sm:inline">{loading ? 'Updating…' : 'Refresh'}</span>
+          </button>
+
+          <button
+            onClick={openAdd}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white rounded-xl shadow-md shadow-violet-600/20 transition-all hover:shadow-lg active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)' }}
+          >
+            <IconAdd />
+            <span>Add Admin</span>
+          </button>
+        </div>
       </div>
 
-      {/* Bulk action bar */}
-      {selCount > 0 && (
-        <div className="mb-4 flex flex-wrap gap-2 p-3 rounded-xl border"
-          style={{ backgroundColor: 'rgba(124,58,237,0.06)', borderColor: 'rgba(124,58,237,0.25)' }}>
-          <span className="text-sm font-semibold self-center mr-1" style={{ color: '#5B21B6' }}>{selCount} selected</span>
-          <button onClick={() => openEdit()} disabled={selCount !== 1}
-            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-colors min-h-[36px] ${selCount === 1 ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700' : 'bg-indigo-50 text-indigo-300 border-indigo-100 cursor-not-allowed'}`}>
-            <IconEdit /> Edit
-          </button>
-          <button onClick={() => openDelete([...selected])}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border bg-red-500 text-white border-red-500 hover:bg-red-600 transition-colors min-h-[36px]">
-            <IconDelete /> Delete{selCount > 1 ? ` (${selCount})` : ''}
-          </button>
-          <button onClick={handleToggleSelected}
-            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-colors min-h-[36px] ${selectedAllActive ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' : 'bg-gray-400 text-white border-gray-400 hover:bg-gray-500'}`}>
-            {selectedAllActive ? <IconToggleOn /> : <IconToggleOff />}
-            {selectedAllActive ? 'Active' : 'Inactive'}
-          </button>
-          <button onClick={() => openReset([...selected])}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border bg-yellow-500 text-white border-yellow-500 hover:bg-yellow-600 transition-colors min-h-[36px]">
-            <IconKey /> Reset Pwd{selCount > 1 ? ` (${selCount})` : ''}
-          </button>
-          <button onClick={() => setSelected([])}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-colors min-h-[36px] ml-auto">
-            ✕ Clear
-          </button>
+      {/* ── Search, Filters, and Bulk Toolbar ────────────────────────────── */}
+      <div className="mb-4 bg-white/90 backdrop-blur-md rounded-2xl border border-purple-100 p-3 sm:p-4 shadow-sm space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+          {/* Search Box */}
+          <div className="relative w-full sm:w-72">
+            <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+              <IconSearch />
+            </span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search by name or phone…"
+              className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-purple-100 bg-slate-50/70 focus:bg-white focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none text-slate-800 transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute inset-y-0 right-2.5 flex items-center text-xs text-slate-400 hover:text-slate-600"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Status Filters */}
+          <div className="flex items-center gap-1.5 self-start sm:self-auto overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+            {['All', 'Active', 'Inactive'].map(tab => (
+              <button
+                key={tab}
+                onClick={() => setStatusFilter(tab)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  statusFilter === tab
+                    ? 'bg-violet-600 text-white shadow-sm'
+                    : 'bg-slate-100/80 text-slate-600 hover:bg-slate-200/80'
+                }`}
+              >
+                {tab}
+                <span className="ml-1.5 text-[10px] opacity-75 font-normal">
+                  ({tab === 'All' ? admins.length : admins.filter(a => a.status === tab).length})
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Bulk Action Toolbar */}
+        {selCount > 0 && (
+          <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-purple-100/70 animate-in fade-in duration-150">
+            <span className="text-xs font-bold text-violet-800 bg-violet-100/80 px-2.5 py-1 rounded-lg">
+              {selCount} selected
+            </span>
+
+            <button
+              onClick={() => openEdit()}
+              disabled={selCount !== 1}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                selCount === 1
+                  ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700 shadow-sm'
+                  : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+              }`}
+            >
+              <IconEdit /> Edit
+            </button>
+
+            <button
+              onClick={() => openDelete([...selected])}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm"
+            >
+              <IconDelete /> Delete ({selCount})
+            </button>
+
+            <button
+              onClick={handleToggleSelected}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                selectedAllActive
+                  ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+              }`}
+            >
+              {selectedAllActive ? <IconToggleOff /> : <IconToggleOn />}
+              Set to {selectedAllActive ? 'Inactive' : 'Active'}
+            </button>
+
+            <button
+              onClick={() => openReset([...selected])}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 transition-all"
+            >
+              <IconKey /> Reset Password
+            </button>
+
+            <button
+              onClick={() => setSelected([])}
+              className="ml-auto text-xs text-slate-400 hover:text-slate-600 font-medium px-2 py-1"
+            >
+              Clear selection
+            </button>
+          </div>
+        )}
+      </div>
+
+      {apiError && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs font-medium flex items-center justify-between">
+          <span>{apiError}</span>
+          <button onClick={fetchAdmins} className="underline text-red-800 font-semibold">Retry</button>
         </div>
       )}
 
-      {apiError && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">{apiError}</div>
-      )}
-
-      {/* ── Mobile: card list ─────────────────────────────────────────────── */}
+      {/* ── Mobile View: Cards ────────────────────────────────────────────── */}
       <div className="lg:hidden space-y-3">
         {loading ? (
-          [1,2,3].map(i => (
-            <div key={i} className="bg-white rounded-2xl p-4 animate-pulse" style={{ border: '1px solid #DDD0F0' }}>
-              <div className="h-4 w-1/2 rounded mb-2" style={{ backgroundColor: '#DDD0F0' }} />
-              <div className="h-3 w-1/3 rounded" style={{ backgroundColor: '#F0EAF8' }} />
+          [1, 2, 3].map(i => (
+            <div key={i} className="bg-white rounded-2xl p-4 border border-purple-100 shadow-sm animate-pulse space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-purple-100" />
+                <div className="space-y-1.5 flex-1">
+                  <div className="h-3 w-3/4 bg-purple-100 rounded" />
+                  <div className="h-2.5 w-1/2 bg-purple-50 rounded" />
+                </div>
+              </div>
             </div>
           ))
-        ) : admins.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 text-sm">No admins found</div>
+        ) : filteredAdmins.length === 0 ? (
+          <div className="bg-white rounded-2xl p-10 text-center border border-purple-100">
+            <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-purple-400">
+              <IconShield />
+            </div>
+            <p className="text-sm font-semibold text-slate-800">No admins found</p>
+            <p className="text-xs text-slate-500 mt-1">Try adjusting your search or add a new admin.</p>
+          </div>
         ) : (
-          admins.map(admin => {
+          filteredAdmins.map(admin => {
             const isSelected = selected.includes(admin.id)
             return (
-              <div key={admin.id} className="bg-white rounded-2xl p-4 transition-all"
-                style={{ border: isSelected ? `2px solid ${ACCENT}` : '1px solid #DDD0F0', boxShadow: isSelected ? `0 0 0 3px rgba(124,58,237,0.12)` : '0 1px 4px rgba(0,0,0,0.05)' }}>
-                <div className="flex items-start gap-3">
-                  <input type="checkbox" checked={isSelected} onChange={() => toggleRow(admin.id)}
-                    className="w-5 h-5 mt-0.5 rounded border-gray-300 cursor-pointer flex-shrink-0" style={{ accentColor: ACCENT }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-sm" style={{ color: '#1A0A2E' }}>{admin.name}</span>
-                      <StatusBadge status={admin.status} />
+              <div
+                key={admin.id}
+                className={`bg-white rounded-2xl p-4 border transition-all duration-150 ${
+                  isSelected
+                    ? 'border-violet-500 shadow-md ring-2 ring-violet-500/10'
+                    : 'border-purple-100/90 shadow-sm hover:border-purple-200'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleRow(admin.id)}
+                      className="w-4 h-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 flex-shrink-0"
+                    />
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs text-white flex-shrink-0"
+                      style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4C1D95 100%)' }}>
+                      {getInitials(admin.name)}
                     </div>
-                    <p className="text-xs mt-0.5 font-mono" style={{ color: '#7A6A8A' }}>{admin.phone}</p>
-                    <p className="text-xs mt-0.5" style={{ color: '#A090B0' }}>Joined {fmtDate(admin.created_at)}</p>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-slate-900 truncate">{admin.name}</span>
+                        <StatusBadge status={admin.status} />
+                      </div>
+                      <p className="text-xs font-mono text-slate-500 mt-0.5">{admin.phone}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="mt-3 ml-8 flex items-center gap-2">
-                  <button onClick={() => openEdit(admin.id)} className="flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors" title="Edit"><IconEdit /></button>
-                  <button onClick={() => openDelete([admin.id])} className="flex items-center justify-center w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors" title="Delete"><IconDelete /></button>
-                  <button onClick={() => handleRowToggle(admin)}
-                    className={`flex items-center justify-center w-9 h-9 rounded-xl transition-colors ${admin.status === 'Active' ? 'bg-green-50 text-green-600 hover:bg-green-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-                    title={admin.status === 'Active' ? 'Deactivate' : 'Activate'}>
-                    {admin.status === 'Active' ? <IconToggleOn /> : <IconToggleOff />}
-                  </button>
-                  <button onClick={() => openReset([admin.id])} className="flex items-center justify-center w-9 h-9 rounded-xl bg-yellow-50 text-yellow-600 hover:bg-yellow-100 transition-colors" title="Reset password"><IconKey /></button>
+
+                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-400">Joined {fmtDate(admin.created_at)}</span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => openEdit(admin.id)}
+                      className="p-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                      title="Edit"
+                    >
+                      <IconEdit />
+                    </button>
+                    <button
+                      onClick={() => handleRowToggle(admin)}
+                      className={`p-2 rounded-lg transition-colors ${admin.status === 'Active' ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'}`}
+                      title={admin.status === 'Active' ? 'Deactivate' : 'Activate'}
+                    >
+                      {admin.status === 'Active' ? <IconToggleOn /> : <IconToggleOff />}
+                    </button>
+                    <button
+                      onClick={() => openReset([admin.id])}
+                      className="p-2 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"
+                      title="Reset password"
+                    >
+                      <IconKey />
+                    </button>
+                    <button
+                      onClick={() => openDelete([admin.id])}
+                      className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                      title="Delete"
+                    >
+                      <IconDelete />
+                    </button>
+                  </div>
                 </div>
               </div>
             )
@@ -438,132 +698,214 @@ export default function Manage() {
         )}
       </div>
 
-      {/* ── Desktop table ─────────────────────────────────────────────────── */}
-      <div className="hidden lg:block bg-white rounded-xl shadow-sm overflow-x-auto" style={{ border: '1px solid #DDD0F0' }}>
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-          <div className="flex flex-wrap gap-2">
-            <button onClick={openAdd} className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors" style={{ backgroundColor: ACCENT }}
-              onMouseEnter={e => e.currentTarget.style.backgroundColor = '#6D28D9'}
-              onMouseLeave={e => e.currentTarget.style.backgroundColor = ACCENT}>
-              <IconAdd /> Add Admin
-            </button>
-            <button onClick={() => openEdit()} disabled={selCount !== 1}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${selCount === 1 ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700' : 'bg-indigo-50 text-indigo-300 border-indigo-100 cursor-not-allowed'}`}>
-              <IconEdit /> Edit
-            </button>
-            <button onClick={() => selCount > 0 && openDelete([...selected])} disabled={selCount === 0}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${selCount > 0 ? 'bg-red-500 text-white border-red-500 hover:bg-red-600' : 'bg-red-50 text-red-300 border-red-100 cursor-not-allowed'}`}>
-              <IconDelete /> Delete{selCount > 1 ? ` (${selCount})` : ''}
-            </button>
-            <button onClick={handleToggleSelected} disabled={selCount === 0}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${selCount > 0 ? (selectedAllActive ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' : 'bg-gray-400 text-white border-gray-400 hover:bg-gray-500') : 'bg-green-50 text-green-300 border-green-100 cursor-not-allowed'}`}>
-              {selectedAllActive ? <IconToggleOn /> : <IconToggleOff />}
-              {selCount > 0 ? (selectedAllActive ? 'Active' : 'Inactive') : 'Active'}
-            </button>
-            <button onClick={() => selCount > 0 && openReset([...selected])} disabled={selCount === 0}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${selCount > 0 ? 'bg-yellow-500 text-white border-yellow-500 hover:bg-yellow-600' : 'bg-yellow-50 text-yellow-300 border-yellow-100 cursor-not-allowed'}`}>
-              <IconKey /> Reset Pwd{selCount > 1 ? ` (${selCount})` : ''}
-            </button>
-          </div>
+      {/* ── Desktop View: High-Density Table ──────────────────────────────── */}
+      <div className="hidden lg:block bg-white rounded-2xl shadow-sm border border-purple-100/90 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-slate-50/80 border-b border-purple-100/80 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
+                <th className="px-4 py-3.5 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allChecked}
+                    ref={el => { if (el) el.indeterminate = someChecked && !allChecked }}
+                    onChange={toggleAll}
+                    className="w-4 h-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer"
+                  />
+                </th>
+                <th className="px-4 py-3.5">Admin User</th>
+                <th className="px-4 py-3.5">Phone Number</th>
+                <th className="px-4 py-3.5">Status</th>
+                <th className="px-4 py-3.5">Date Registered</th>
+                <th className="px-4 py-3.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-purple-50">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12 text-slate-400">
+                    <div className="flex items-center justify-center gap-2">
+                      <IconRefresh spinning={true} />
+                      <span>Loading administrator directory…</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredAdmins.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12 text-slate-400">
+                    No administrators found matching criteria.
+                  </td>
+                </tr>
+              ) : (
+                filteredAdmins.map(admin => {
+                  const isSelected = selected.includes(admin.id)
+                  return (
+                    <tr
+                      key={admin.id}
+                      onClick={() => toggleRow(admin.id)}
+                      className={`cursor-pointer transition-colors duration-150 ${
+                        isSelected ? 'bg-violet-50/70 hover:bg-violet-50' : 'hover:bg-slate-50/60'
+                      }`}
+                    >
+                      <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleRow(admin.id)}
+                          className="w-4 h-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer"
+                        />
+                      </td>
+
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-[11px] text-white flex-shrink-0 shadow-sm"
+                            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)' }}
+                          >
+                            {getInitials(admin.name)}
+                          </div>
+                          <span className="font-semibold text-slate-900 text-sm">{admin.name}</span>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-3.5 font-mono text-slate-600 font-medium">
+                        {admin.phone}
+                      </td>
+
+                      <td className="px-4 py-3.5">
+                        <StatusBadge status={admin.status} />
+                      </td>
+
+                      <td className="px-4 py-3.5 text-slate-500">
+                        {fmtDate(admin.created_at)}
+                      </td>
+
+                      <td className="px-4 py-3.5 text-right" onClick={e => e.stopPropagation()}>
+                        <div className="inline-flex items-center gap-1">
+                          <button
+                            onClick={() => openEdit(admin.id)}
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            title="Edit"
+                          >
+                            <IconEdit />
+                          </button>
+                          <button
+                            onClick={() => handleRowToggle(admin)}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              admin.status === 'Active'
+                                ? 'text-slate-500 hover:text-amber-600 hover:bg-amber-50'
+                                : 'text-slate-500 hover:text-emerald-600 hover:bg-emerald-50'
+                            }`}
+                            title={admin.status === 'Active' ? 'Set Inactive' : 'Set Active'}
+                          >
+                            {admin.status === 'Active' ? <IconToggleOn /> : <IconToggleOff />}
+                          </button>
+                          <button
+                            onClick={() => openReset([admin.id])}
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-violet-600 hover:bg-violet-50 transition-colors"
+                            title="Reset password"
+                          >
+                            <IconKey />
+                          </button>
+                          <button
+                            onClick={() => openDelete([admin.id])}
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            title="Delete"
+                          >
+                            <IconDelete />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
         </div>
-
-        <table className="w-full text-sm min-w-[640px]">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-4 py-3 w-10">
-                <input type="checkbox" checked={allChecked}
-                  ref={el => { if (el) el.indeterminate = someChecked && !allChecked }}
-                  onChange={toggleAll}
-                  className="w-4 h-4 rounded border-gray-300 cursor-pointer" style={{ accentColor: ACCENT }} />
-              </th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">Name</th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">Phone</th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">Status</th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">Joined</th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {loading ? (
-              <tr><td colSpan={6} className="text-center py-10 text-gray-400">Loading…</td></tr>
-            ) : admins.length === 0 ? (
-              <tr><td colSpan={6} className="text-center py-10 text-gray-400">No admins found</td></tr>
-            ) : (
-              admins.map(admin => {
-                const isSelected = selected.includes(admin.id)
-                return (
-                  <tr key={admin.id} onClick={() => toggleRow(admin.id)}
-                    className={`cursor-pointer transition-colors ${isSelected ? 'bg-purple-50' : 'hover:bg-gray-50'}`}>
-                    <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
-                      <input type="checkbox" checked={isSelected} onChange={() => toggleRow(admin.id)}
-                        className="w-4 h-4 rounded border-gray-300 cursor-pointer" style={{ accentColor: ACCENT }} />
-                    </td>
-                    <td className="px-4 py-4 font-medium text-gray-800">{admin.name}</td>
-                    <td className="px-4 py-4 text-gray-500">{admin.phone}</td>
-                    <td className="px-4 py-4"><StatusBadge status={admin.status} /></td>
-                    <td className="px-4 py-4 text-gray-400 text-xs">{fmtDate(admin.created_at)}</td>
-                    <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <button onClick={() => openEdit(admin.id)} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"><IconEdit /> Edit</button>
-                        <button onClick={() => openDelete([admin.id])} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"><IconDelete /> Delete</button>
-                        <button onClick={() => handleRowToggle(admin)}
-                          className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors ${admin.status === 'Active' ? 'text-green-600 bg-green-50 hover:bg-green-100' : 'text-gray-500 bg-gray-100 hover:bg-gray-200'}`}>
-                          {admin.status === 'Active' ? <IconToggleOn /> : <IconToggleOff />}
-                          {admin.status === 'Active' ? 'Active' : 'Inactive'}
-                        </button>
-                        <button onClick={() => openReset([admin.id])} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-yellow-600 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors"><IconKey /> Reset</button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
       </div>
-
-      {/* Mobile FAB */}
-      <button onClick={openAdd}
-        className="lg:hidden fixed z-30 flex items-center gap-2 px-5 py-3.5 rounded-full shadow-lg font-semibold text-sm transition-all active:scale-95"
-        style={{ backgroundColor: ACCENT, color: '#fff', bottom: 'calc(64px + env(safe-area-inset-bottom) + 16px)', right: '16px', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
-        <IconAdd /> Add Admin
-      </button>
 
       {/* ── Add Admin Modal ──────────────────────────────────────────────── */}
       {showAddModal && (
         <Modal onClose={() => setShowAddModal(false)}>
-          <ModalPanel>
-            <div className="px-5 pt-5 pb-4 flex items-center justify-between border-b border-gray-100">
-              <h2 className="text-lg font-bold text-gray-800">Add New Admin</h2>
-              <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">✕</button>
-            </div>
-            <div className="p-5 space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(95dvh - 120px)' }}>
+          <ModalPanel
+            title="Create New Administrator"
+            subtitle="Grant admin credentials to manage accounts and portals."
+            onClose={() => setShowAddModal(false)}
+          >
+            <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
-                <input value={addForm.name} onChange={e => setAddForm(f => ({ ...f, name: e.target.value }))}
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={addForm.name}
+                  onChange={e => setAddForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. Abebe Kebede"
-                  className={`w-full border rounded-xl px-3 py-3 text-sm outline-none min-h-[44px] ${addErrors.name ? 'border-red-400' : 'border-gray-300'} focus:ring-2`}
-                  style={{ '--tw-ring-color': ACCENT }} />
-                {addErrors.name && <p className="text-xs text-red-500 mt-1">{addErrors.name}</p>}
+                  className={`w-full border rounded-xl px-3.5 py-2.5 text-sm outline-none transition-all ${
+                    addErrors.name
+                      ? 'border-red-400 ring-2 ring-red-100'
+                      : 'border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-100'
+                  }`}
+                />
+                {addErrors.name && <p className="text-xs text-red-500 font-medium mt-1">{addErrors.name}</p>}
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
-                <PhoneInput value={addForm.phone} onChange={v => setAddForm(f => ({ ...f, phone: v }))} error={addErrors.phone} />
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
+                  Mobile Number
+                </label>
+                <PhoneInput
+                  value={addForm.phone}
+                  onChange={v => setAddForm(f => ({ ...f, phone: v }))}
+                  error={addErrors.phone}
+                />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-                <PasswordInput value={addForm.password} onChange={e => setAddForm(f => ({ ...f, password: e.target.value }))}
-                  show={showAddPwd} onToggle={() => setShowAddPwd(v => !v)} error={addErrors.password} />
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
+                  Initial Password
+                </label>
+                <PasswordInput
+                  value={addForm.password}
+                  onChange={e => setAddForm(f => ({ ...f, password: e.target.value }))}
+                  show={showAddPwd}
+                  onToggle={() => setShowAddPwd(v => !v)}
+                  error={addErrors.password}
+                />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm Password</label>
-                <PasswordInput value={addForm.confirmPassword} onChange={e => setAddForm(f => ({ ...f, confirmPassword: e.target.value }))}
-                  show={showAddConfirm} onToggle={() => setShowAddConfirm(v => !v)} error={addErrors.confirmPassword} />
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
+                  Confirm Password
+                </label>
+                <PasswordInput
+                  value={addForm.confirmPassword}
+                  onChange={e => setAddForm(f => ({ ...f, confirmPassword: e.target.value }))}
+                  show={showAddConfirm}
+                  onToggle={() => setShowAddConfirm(v => !v)}
+                  error={addErrors.confirmPassword}
+                />
               </div>
             </div>
-            <div className="px-5 pb-5 pt-3 flex gap-3 border-t border-gray-100">
-              <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 border border-gray-300 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors min-h-[44px]">Cancel</button>
-              <button onClick={handleAdd} className="flex-1 py-3 text-white rounded-xl text-sm font-semibold transition-colors min-h-[44px]" style={{ backgroundColor: ACCENT }}>Add Admin</button>
+
+            <div className="px-6 py-4 border-t border-purple-100/70 bg-slate-50/50 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAdd}
+                className="flex-1 py-2.5 text-white rounded-xl text-xs font-semibold shadow-md shadow-violet-600/20 transition-all active:scale-95"
+                style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)' }}
+              >
+                Confirm & Create
+              </button>
             </div>
           </ModalPanel>
         </Modal>
@@ -572,26 +914,57 @@ export default function Manage() {
       {/* ── Edit Admin Modal ─────────────────────────────────────────────── */}
       {showEditModal && (
         <Modal onClose={() => setShowEditModal(false)}>
-          <ModalPanel>
-            <div className="px-5 pt-5 pb-4 flex items-center justify-between border-b border-gray-100">
-              <h2 className="text-lg font-bold text-gray-800">Edit Admin</h2>
-              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">✕</button>
-            </div>
-            <div className="p-5 space-y-4">
+          <ModalPanel
+            title="Edit Admin Account"
+            subtitle="Update display name and contact phone number."
+            onClose={() => setShowEditModal(false)}
+          >
+            <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
-                <input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
-                  className={`w-full border rounded-xl px-3 py-3 text-sm outline-none min-h-[44px] ${editErrors.name ? 'border-red-400' : 'border-gray-300'}`} />
-                {editErrors.name && <p className="text-xs text-red-500 mt-1">{editErrors.name}</p>}
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                  className={`w-full border rounded-xl px-3.5 py-2.5 text-sm outline-none transition-all ${
+                    editErrors.name
+                      ? 'border-red-400 ring-2 ring-red-100'
+                      : 'border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-100'
+                  }`}
+                />
+                {editErrors.name && <p className="text-xs text-red-500 font-medium mt-1">{editErrors.name}</p>}
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
-                <PhoneInput value={editForm.phone} onChange={v => setEditForm(f => ({ ...f, phone: v }))} error={editErrors.phone} />
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
+                  Mobile Number
+                </label>
+                <PhoneInput
+                  value={editForm.phone}
+                  onChange={v => setEditForm(f => ({ ...f, phone: v }))}
+                  error={editErrors.phone}
+                />
               </div>
             </div>
-            <div className="px-5 pb-5 pt-3 flex gap-3 border-t border-gray-100">
-              <button onClick={() => setShowEditModal(false)} className="flex-1 py-3 border border-gray-300 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors min-h-[44px]">Cancel</button>
-              <button onClick={handleEdit} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-colors min-h-[44px]">Save Changes</button>
+
+            <div className="px-6 py-4 border-t border-purple-100/70 bg-slate-50/50 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleEdit}
+                className="flex-1 py-2.5 text-white rounded-xl text-xs font-semibold shadow-md shadow-violet-600/20 transition-all active:scale-95"
+                style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)' }}
+              >
+                Save Changes
+              </button>
             </div>
           </ModalPanel>
         </Modal>
@@ -600,26 +973,54 @@ export default function Manage() {
       {/* ── Reset Password Modal ─────────────────────────────────────────── */}
       {showResetModal && (
         <Modal onClose={() => setShowResetModal(false)}>
-          <ModalPanel>
-            <div className="px-5 pt-5 pb-4 flex items-center justify-between border-b border-gray-100">
-              <h2 className="text-lg font-bold text-gray-800">Reset Password</h2>
-              <button onClick={() => setShowResetModal(false)} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">✕</button>
-            </div>
-            <div className="p-5 space-y-4">
+          <ModalPanel
+            title={`Reset Password (${resetTargetIds.length} User${resetTargetIds.length > 1 ? 's' : ''})`}
+            subtitle="Enter and confirm a temporary or new password."
+            onClose={() => setShowResetModal(false)}
+          >
+            <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">New Password</label>
-                <PasswordInput value={resetForm.password} onChange={e => setResetForm(f => ({ ...f, password: e.target.value }))}
-                  show={showResetPwd} onToggle={() => setShowResetPwd(v => !v)} error={resetErrors.password} />
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
+                  New Password
+                </label>
+                <PasswordInput
+                  value={resetForm.password}
+                  onChange={e => setResetForm(f => ({ ...f, password: e.target.value }))}
+                  show={showResetPwd}
+                  onToggle={() => setShowResetPwd(v => !v)}
+                  error={resetErrors.password}
+                />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm Password</label>
-                <PasswordInput value={resetForm.confirmPassword} onChange={e => setResetForm(f => ({ ...f, confirmPassword: e.target.value }))}
-                  show={showResetConfirm} onToggle={() => setShowResetConfirm(v => !v)} error={resetErrors.confirmPassword} />
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
+                  Confirm New Password
+                </label>
+                <PasswordInput
+                  value={resetForm.confirmPassword}
+                  onChange={e => setResetForm(f => ({ ...f, confirmPassword: e.target.value }))}
+                  show={showResetConfirm}
+                  onToggle={() => setShowResetConfirm(v => !v)}
+                  error={resetErrors.confirmPassword}
+                />
               </div>
             </div>
-            <div className="px-5 pb-5 pt-3 flex gap-3 border-t border-gray-100">
-              <button onClick={() => setShowResetModal(false)} className="flex-1 py-3 border border-gray-300 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors min-h-[44px]">Cancel</button>
-              <button onClick={handleResetSave} className="flex-1 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl text-sm font-semibold transition-colors min-h-[44px]">Reset Password</button>
+
+            <div className="px-6 py-4 border-t border-purple-100/70 bg-slate-50/50 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowResetModal(false)}
+                className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleResetSave}
+                className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-md shadow-amber-500/20 transition-all active:scale-95"
+              >
+                Update Password
+              </button>
             </div>
           </ModalPanel>
         </Modal>
