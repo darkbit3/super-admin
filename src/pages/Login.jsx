@@ -206,19 +206,6 @@ function LoginForm({ onForgot }) {
     try {
       const admin = await authApi.login(identifierToSend, password)
 
-      if (!isPhone && admin) {
-        const matchesExactCase =
-          (admin.name && admin.name === loginInput) ||
-          (admin.phone && admin.phone === loginInput)
-
-        if (!matchesExactCase) {
-          await authApi.logout().catch(() => {})
-          setError('Invalid username or password')
-          toast?.error?.('Invalid username or password')
-          return
-        }
-      }
-
       navigate(ROUTES.DASHBOARD)
     } catch (err) {
       const msg = err.message || ''
