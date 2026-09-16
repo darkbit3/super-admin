@@ -313,9 +313,12 @@ export default function Manage() {
   const handleAdd = async () => {
     const errs = {}
     if (!addForm.name.trim()) errs.name = 'Full name is required'
+    else if (addForm.name.trim().length < 2) errs.name = 'Name must be at least 2 characters'
     if (!addForm.phone || addForm.phone.length !== 9) errs.phone = 'Enter a valid 9-digit number starting with 9 or 7'
-    if (addForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addForm.email.trim())) {
-      errs.email = 'Enter a valid email address'
+    if (!addForm.email || !addForm.email.trim()) {
+      errs.email = 'Email address is required'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addForm.email.trim())) {
+      errs.email = 'Enter a valid email address (e.g. admin@shmeta.com)'
     }
     if (!addForm.password) errs.password = 'Password is required'
     else if (addForm.password.length < 6) errs.password = 'Minimum 6 characters'
@@ -327,12 +330,13 @@ export default function Manage() {
       return
     }
 
+    setAddLoading(true)
     try {
       const { confirmPassword, ...rest } = addForm
       await manageApi.create({
         ...rest,
         phone: '0' + addForm.phone,
-        email: addForm.email && addForm.email.trim() ? addForm.email.trim() : undefined,
+        email: addForm.email.trim().toLowerCase(),
       })
       await fetchAdmins()
       setShowAddModal(false)
@@ -351,6 +355,8 @@ export default function Manage() {
       } else {
         toast.error(err.message)
       }
+    } finally {
+      setAddLoading(false)
     }
   }
 
@@ -368,16 +374,27 @@ export default function Manage() {
   }
 
   const handleEdit = async () => {
-    if (!editForm.name.trim() || editForm.phone.length !== 9) return
-    if (editForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email.trim())) {
-      setEditErrors({ email: 'Enter a valid email address' })
+    const errs = {}
+    if (!editForm.name.trim()) errs.name = 'Full name is required'
+    else if (editForm.name.trim().length < 2) errs.name = 'Name must be at least 2 characters'
+    if (!editForm.phone || editForm.phone.length !== 9) errs.phone = 'Enter a valid 9-digit number starting with 9 or 7'
+    if (!editForm.email || !editForm.email.trim()) {
+      errs.email = 'Email address is required'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email.trim())) {
+      errs.email = 'Enter a valid email address (e.g. admin@shmeta.com)'
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setEditErrors(errs)
       return
     }
+
+    setEditLoading(true)
     try {
       await manageApi.update(editTarget.id, {
-        name: editForm.name,
+        name: editForm.name.trim(),
         phone: '0' + editForm.phone,
-        email: editForm.email && editForm.email.trim() ? editForm.email.trim() : null,
+        email: editForm.email.trim().toLowerCase(),
       })
       await fetchAdmins()
       setShowEditModal(false)
@@ -396,6 +413,8 @@ export default function Manage() {
       } else {
         toast.error(err.message)
       }
+    } finally {
+      setEditLoading(false)
     }
   }
 
