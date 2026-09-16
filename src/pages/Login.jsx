@@ -231,7 +231,7 @@ function LoginForm({ onForgot }) {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label htmlFor="login-username" className="block text-sm font-medium" style={{ color: '#3A2A4A' }}>
-              {isPhoneMode ? 'Phone Number' : 'Username or Phone'}
+              {isPhoneMode ? 'Phone Number' : 'Username '}
             </label>
             <button
               type="button"
