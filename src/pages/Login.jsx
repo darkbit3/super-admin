@@ -362,7 +362,7 @@ function ForgotFlow({ onBack }) {
 
   const sendOtp = async () => {
     const normalizedEmail = email.trim().toLowerCase()
-    if (!/^[^\s@]+@[^ \s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       toast.error('Enter a valid email address')
       return
     }
