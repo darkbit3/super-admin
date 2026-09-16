@@ -495,6 +495,7 @@ export default function Manage() {
       return
     }
 
+    setResetLoading(true)
     try {
       await manageApi.bulkResetPassword(resetTargetIds, resetForm.password)
       await fetchAdmins()
@@ -503,6 +504,8 @@ export default function Manage() {
       toast.success(`Password reset for ${resetTargetIds.length} admin(s)`)
     } catch (err) {
       toast.error(err.message)
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -903,12 +906,14 @@ export default function Manage() {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
-                  Email Address <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                  Email Address <span className="text-red-400">*</span>
                 </label>
                 <div className={`flex items-center border rounded-xl overflow-hidden transition-all bg-white ${
                   addErrors.email
                     ? 'border-red-400 ring-2 ring-red-100'
-                    : 'border-slate-200 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100'
+                    : addForm.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addForm.email.trim())
+                      ? 'border-emerald-400 ring-2 ring-emerald-100'
+                      : 'border-slate-200 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100'
                 }`}>
                   <span className="pl-3.5 text-slate-400">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -918,12 +923,26 @@ export default function Manage() {
                   <input
                     type="email"
                     value={addForm.email}
-                    onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))}
+                    onChange={e => {
+                      setAddForm(f => ({ ...f, email: e.target.value }))
+                      if (addErrors.email) setAddErrors(ev => ({ ...ev, email: undefined }))
+                    }}
+                    onBlur={e => {
+                      const v = e.target.value.trim()
+                      if (!v) setAddErrors(ev => ({ ...ev, email: 'Email address is required' }))
+                      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) setAddErrors(ev => ({ ...ev, email: 'Enter a valid email address (e.g. admin@shmeta.com)' }))
+                    }}
                     placeholder="e.g. admin@shmeta.com"
                     className="w-full px-3 py-2.5 text-sm outline-none bg-transparent text-slate-800 placeholder-slate-400"
                   />
+                  {addForm.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addForm.email.trim()) && (
+                    <span className="pr-3 text-emerald-500">✓</span>
+                  )}
                 </div>
-                {addErrors.email && <p className="text-xs text-red-500 font-medium mt-1">{addErrors.email}</p>}
+                {addErrors.email
+                  ? <p className="text-xs text-red-500 font-medium mt-1">{addErrors.email}</p>
+                  : <p className="text-[11px] text-slate-400 mt-1">Required — used for password recovery</p>
+                }
               </div>
 
               <div>
@@ -957,17 +976,19 @@ export default function Manage() {
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-colors"
+                disabled={addLoading}
+                className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleAdd}
-                className="flex-1 py-2.5 text-white rounded-xl text-xs font-semibold shadow-md shadow-violet-600/20 transition-all active:scale-95"
+                disabled={addLoading}
+                className="flex-1 py-2.5 text-white rounded-xl text-xs font-semibold shadow-md shadow-violet-600/20 transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2"
                 style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)' }}
               >
-                Confirm & Create
+                {addLoading ? <><Spinner size="sm" className="border-white/30 border-t-white" /> Creating…</> : 'Confirm & Create'}
               </button>
             </div>
           </ModalPanel>
@@ -1013,12 +1034,14 @@ export default function Manage() {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
-                  Email Address <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                  Email Address <span className="text-red-400">*</span>
                 </label>
                 <div className={`flex items-center border rounded-xl overflow-hidden transition-all bg-white ${
                   editErrors.email
                     ? 'border-red-400 ring-2 ring-red-100'
-                    : 'border-slate-200 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100'
+                    : editForm.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email.trim())
+                      ? 'border-emerald-400 ring-2 ring-emerald-100'
+                      : 'border-slate-200 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100'
                 }`}>
                   <span className="pl-3.5 text-slate-400">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1028,12 +1051,26 @@ export default function Manage() {
                   <input
                     type="email"
                     value={editForm.email}
-                    onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
+                    onChange={e => {
+                      setEditForm(f => ({ ...f, email: e.target.value }))
+                      if (editErrors.email) setEditErrors(ev => ({ ...ev, email: undefined }))
+                    }}
+                    onBlur={e => {
+                      const v = e.target.value.trim()
+                      if (!v) setEditErrors(ev => ({ ...ev, email: 'Email address is required' }))
+                      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) setEditErrors(ev => ({ ...ev, email: 'Enter a valid email address (e.g. admin@shmeta.com)' }))
+                    }}
                     placeholder="e.g. admin@shmeta.com"
                     className="w-full px-3 py-2.5 text-sm outline-none bg-transparent text-slate-800 placeholder-slate-400"
                   />
+                  {editForm.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email.trim()) && (
+                    <span className="pr-3 text-emerald-500">✓</span>
+                  )}
                 </div>
-                {editErrors.email && <p className="text-xs text-red-500 font-medium mt-1">{editErrors.email}</p>}
+                {editErrors.email
+                  ? <p className="text-xs text-red-500 font-medium mt-1">{editErrors.email}</p>
+                  : <p className="text-[11px] text-slate-400 mt-1">Required — used for password recovery</p>
+                }
               </div>
             </div>
 
@@ -1041,17 +1078,19 @@ export default function Manage() {
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
-                className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-colors"
+                disabled={editLoading}
+                className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleEdit}
-                className="flex-1 py-2.5 text-white rounded-xl text-xs font-semibold shadow-md shadow-violet-600/20 transition-all active:scale-95"
+                disabled={editLoading}
+                className="flex-1 py-2.5 text-white rounded-xl text-xs font-semibold shadow-md shadow-violet-600/20 transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2"
                 style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)' }}
               >
-                Save Changes
+                {editLoading ? <><Spinner size="sm" className="border-white/30 border-t-white" /> Saving…</> : 'Save Changes'}
               </button>
             </div>
           </ModalPanel>
@@ -1098,16 +1137,18 @@ export default function Manage() {
               <button
                 type="button"
                 onClick={() => setShowResetModal(false)}
-                className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-colors"
+                disabled={resetLoading}
+                className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleResetSave}
-                className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-md shadow-amber-500/20 transition-all active:scale-95"
+                disabled={resetLoading}
+                className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-md shadow-amber-500/20 transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2"
               >
-                Update Password
+                {resetLoading ? <><Spinner size="sm" className="border-white/30 border-t-white" /> Updating…</> : 'Update Password'}
               </button>
             </div>
           </ModalPanel>
