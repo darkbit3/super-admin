@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { ROUTES } from '../config/routes'
 import { authApi } from '../api/authApi'
 import { api } from '../api/client'
+import { useToast } from '../context/ToastContext'
 
 const ACCENT        = '#7C3AED'
-const ACCENT_BG     = 'rgba(124,58,237,0.10)'
-const ACCENT_BORDER = 'rgba(124,58,237,0.25)'
 const DARK          = '#1A0A2E'
 
 // ── phone helpers ──────────────────────────────────────────────────────────
@@ -80,9 +79,9 @@ function LoginForm({ onForgot }) {
   const [username, setUsername]         = useState('')
   const [password, setPassword]         = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError]               = useState('')
   const [loading, setLoading]           = useState(false)
   const navigate = useNavigate()
+  const toast = useToast()
 
   useEffect(() => {
     const BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-1-khts.onrender.com/api'
@@ -92,8 +91,8 @@ function LoginForm({ onForgot }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     const loginInput = username.trim()
-    if (!loginInput) { setError('Please enter your username or phone number'); return }
-    setError(''); setLoading(true)
+    if (!loginInput) { toast.error('Please enter your username or phone number'); return }
+    setLoading(true)
 
     // Detect if input is phone number (numeric) or username (alphabetic/alphanumeric)
     const hasLetters = /[a-zA-Z]/.test(loginInput)
@@ -115,7 +114,7 @@ function LoginForm({ onForgot }) {
 
         if (!matchesExactCase) {
           await authApi.logout().catch(() => {})
-          setError('Invalid username or password')
+          toast.error('Invalid username or password')
           return
         }
       }
@@ -133,9 +132,9 @@ function LoginForm({ onForgot }) {
         /credentials/i.test(msg)
 
       if (isAuthError) {
-        setError(expectedAuthError)
+        toast.error(expectedAuthError)
       } else {
-        setError(msg || expectedAuthError)
+        toast.error(msg || expectedAuthError)
       }
     } finally {
       setLoading(false)
@@ -148,10 +147,6 @@ function LoginForm({ onForgot }) {
         <h2 className="text-xl font-bold" style={{ color: DARK }}>Super Admin Sign In</h2>
         <p className="text-sm mt-1" style={{ color: '#7A6A8A' }}>Enter your credentials to access full control.</p>
       </div>
-
-      {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">{error}</div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -208,7 +203,6 @@ function ForgotFlow({ onBack }) {
   const [email, setEmail] = useState('')
 
   const [emailLoading, setEmailLoading] = useState(false)
-  const [emailError,   setEmailError]   = useState('')
 
   const [otp,         setOtp]       = useState('')
   const [newPass,     setNewPass]   = useState('')
@@ -216,22 +210,22 @@ function ForgotFlow({ onBack }) {
   const [showNew,     setShowNew]   = useState(false)
   const [showConf,    setShowConf]  = useState(false)
   const [otpLoading,  setOtpLoading] = useState(false)
-  const [otpError,    setOtpError]  = useState('')
+  const toast = useToast()
 
   const submitEmail = async (e) => {
     e.preventDefault()
     const normalizedEmail = email.trim().toLowerCase()
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      setEmailError('Enter a valid email address')
+      toast.error('Enter a valid email address')
       return
     }
-    setEmail(normalizedEmail); setEmailError(''); setEmailLoading(true)
+    setEmail(normalizedEmail); setEmailLoading(true)
     try {
       const res = await api.post('/super-auth/forgot-password/check-email', { email: normalizedEmail }, { refreshOnUnauthorized: false })
       setDevOtp(res?.data?.otp ?? null)
       setStep('otp')
     } catch (err) {
-      setEmailError(err.message || 'Email not found. Please check and try again.')
+      toast.error(err.message || 'Email not found. Please check and try again.')
     } finally {
       setEmailLoading(false)
     }
@@ -239,15 +233,16 @@ function ForgotFlow({ onBack }) {
 
   const submitOtp = async (e) => {
     e.preventDefault()
-    if (otp.length !== 6)        { setOtpError('OTP must be exactly 6 digits'); return }
-    if (newPass.length < 6)      { setOtpError('Password must be at least 6 characters'); return }
-    if (newPass !== confirmPass) { setOtpError('Passwords do not match'); return }
-    setOtpError(''); setOtpLoading(true)
+    if (otp.length !== 6)        { toast.error('OTP must be exactly 6 digits'); return }
+    if (newPass.length < 6)      { toast.error('Password must be at least 6 characters'); return }
+    if (newPass !== confirmPass) { toast.error('Passwords do not match'); return }
+    setOtpLoading(true)
     try {
       await api.post('/super-auth/forgot-password/verify-otp', { email, otp, newPassword: newPass }, { refreshOnUnauthorized: false })
+      toast.success('Password reset successfully')
       setStep('done')
     } catch (err) {
-      setOtpError(err.message || 'Invalid or expired OTP.')
+      toast.error(err.message || 'Invalid or expired OTP.')
     } finally {
       setOtpLoading(false)
     }
@@ -287,10 +282,6 @@ function ForgotFlow({ onBack }) {
             style={{ backgroundColor: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.4)', color: '#92400e' }}>
             Dev mode — OTP: {devOtp}
           </div>
-        )}
-
-        {otpError && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">{otpError}</div>
         )}
 
         <form onSubmit={submitOtp} className="space-y-4">
@@ -340,7 +331,7 @@ function ForgotFlow({ onBack }) {
           </button>
 
           <button type="button"
-            onClick={() => { setStep('email'); setOtp(''); setNewPass(''); setConfirm(''); setOtpError('') }}
+            onClick={() => { setStep('email'); setOtp(''); setNewPass(''); setConfirm('') }}
             className="w-full text-sm font-medium py-2 hover:underline" style={{ color: ACCENT }}>
             ← Resend Code
           </button>
@@ -356,10 +347,6 @@ function ForgotFlow({ onBack }) {
         <h2 className="text-xl font-bold" style={{ color: DARK }}>Forgot Password</h2>
         <p className="text-sm mt-1" style={{ color: '#7A6A8A' }}>Enter your email to receive a verification code.</p>
       </div>
-
-      {emailError && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">{emailError}</div>
-      )}
 
       <form onSubmit={submitEmail} className="space-y-4">
         <div>

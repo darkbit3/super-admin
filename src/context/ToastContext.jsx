@@ -44,7 +44,7 @@ export function ToastProvider({ children }) {
     setToasts(prev => prev.filter(t => t.id !== id))
   }, [])
 
-  const toast = useCallback((message, type = 'info', duration = 4000) => {
+  const toast = useCallback((message, type = 'info', duration = 3000) => {
     const id = ++_idCounter
     setToasts(prev => [...prev, { id, message, type }])
     if (duration > 0) {
@@ -54,9 +54,9 @@ export function ToastProvider({ children }) {
   }, [dismiss])
 
   const success = useCallback((msg, dur) => toast(msg, 'success', dur), [toast])
-  const error   = useCallback((msg, dur) => toast(msg, 'error',   dur ?? 6000), [toast])
-  const warning = useCallback((msg, dur) => toast(msg, 'warning', dur), [toast])
-  const info    = useCallback((msg, dur) => toast(msg, 'info',    dur), [toast])
+  const error   = useCallback((msg, dur) => toast(msg, 'error',   dur ?? 3000), [toast])
+  const warning = useCallback((msg, dur) => toast(msg, 'warning', dur ?? 3000), [toast])
+  const info    = useCallback((msg, dur) => toast(msg, 'info',    dur ?? 3000), [toast])
 
   return (
     <ToastContext.Provider value={{ toast, success, error, warning, info, dismiss }}>
@@ -64,7 +64,7 @@ export function ToastProvider({ children }) {
       <div
         aria-live="polite"
         className="fixed z-[9999] flex flex-col gap-2 pointer-events-none"
-        style={{ top: '16px', right: '16px', left: '16px', maxWidth: '400px', marginLeft: 'auto' }}
+        style={{ top: '16px', right: '16px', width: 'min(400px, calc(100vw - 32px))' }}
       >
         {toasts.map(t => {
           const s = STYLES[t.type] || STYLES.info
@@ -77,7 +77,7 @@ export function ToastProvider({ children }) {
             >
               <span style={{ color: s.icon, marginTop: '1px' }}>{ICONS[t.type]}</span>
               <p className="flex-1 text-sm font-medium leading-snug" style={{ color: s.text }}>{t.message}</p>
-              <button onClick={() => dismiss(t.id)} className="flex-shrink-0 ml-1 rounded p-0.5 hover:opacity-70 transition-opacity pointer-events-auto" style={{ color: s.icon }} aria-label="Dismiss">
+              <button onClick={() => dismiss(t.id)} className="flex-shrink-0 ml-1 rounded p-0.5 hover:opacity-70 transition-opacity pointer-events-auto" style={{ color: s.icon }} aria-label="Close message" title="Close message">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
