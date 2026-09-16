@@ -73,6 +73,88 @@ button {
   animation: route-progress 0.38s ease-out forwards;
 }
 
+/* Enhanced Fullscreen Route Transition Overlay */
+.route-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(246, 242, 251, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: all;
+  transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.route-loader-fadein {
+  opacity: 1;
+  animation: routeFadeIn 0.2s ease-out forwards;
+}
+
+.route-loader-fadeout {
+  opacity: 0;
+  pointer-events: none;
+  animation: routeFadeOut 0.22s ease-in forwards;
+}
+
+.route-loader-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.75rem 2.25rem;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  box-shadow: 0 25px 50px -12px rgba(88, 28, 135, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+  animation: routeCardPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.route-loader-ring {
+  position: absolute;
+  width: 4.75rem;
+  height: 4.75rem;
+  border-radius: 9999px;
+  border: 3px solid rgba(124, 58, 237, 0.15);
+  border-top-color: #7C3AED;
+  border-right-color: #A78BFA;
+  animation: loader-spin 0.85s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+}
+
+.route-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5px;
+  background: linear-gradient(90deg, #7C3AED 0%, #C084FC 50%, #6366F1 100%);
+  background-size: 200% 100%;
+  animation: routeProgressBarAnim 1.2s ease-in-out infinite;
+}
+
+@keyframes routeFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes routeFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes routeCardPop {
+  from { transform: scale(0.9) translateY(8px); opacity: 0.7; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes routeProgressBarAnim {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 @keyframes loader-spin {
   to { transform: rotate(360deg); }
 }
@@ -89,9 +171,11 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .loader-spinner,
   .loader-skeleton,
-  .route-progress {
+  .route-progress,
+  .route-loader-ring,
+  .route-loader-card {
     animation: none;
-    opacity: 0.72;
+    opacity: 0.85;
   }
 }
 

@@ -23,7 +23,7 @@ export default function Layout({ children }) {
           className="hidden lg:flex items-center justify-between px-8 py-3.5 sticky top-0 z-30 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-purple-100 shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
         >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white shadow-sm border border-purple-200/50 flex items-center justify-center p-1 overflow-hidden flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-purple-200/70 flex items-center justify-center p-1.5 overflow-hidden flex-shrink-0 transition-transform duration-200 hover:scale-105">
               <img src="/logo.png" alt="Shmeta Logo" className="w-full h-full object-contain" />
             </div>
             <div>
