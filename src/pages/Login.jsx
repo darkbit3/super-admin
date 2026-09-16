@@ -76,9 +76,11 @@ export default function Login() {
 // Login form (username or phone)
 // ═══════════════════════════════════════════════════════════════════════════
 function LoginForm({ onForgot }) {
-  const [username, setUsername]         = useState('')
+  const [inputValue, setInputValue]     = useState('')
+  const [isPhoneMode, setIsPhoneMode]   = useState(false)
   const [password, setPassword]         = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError]               = useState('')
   const [loading, setLoading]           = useState(false)
   const navigate = useNavigate()
   const toast = useToast()
@@ -88,23 +90,113 @@ function LoginForm({ onForgot }) {
     fetch(`${BASE_URL.replace(/\/api$/, '')}/health`).catch(() => {})
   }, [])
 
+  const handleInputChange = (e) => {
+    const val = e.target.value
+
+    // If currently in phone mode
+    if (isPhoneMode) {
+      if (!val) {
+        setInputValue('')
+        setIsPhoneMode(false)
+        return
+      }
+
+      let digits = val.replace(/\D/g, '')
+
+      // If user pasted/typed with 251 or 0 prefix
+      if (digits.startsWith('251')) digits = digits.slice(3)
+      if (digits.startsWith('0')) digits = digits.slice(1)
+
+      // Phone number must start with 9 or 7
+      if (digits.length >= 1 && digits[0] !== '9' && digits[0] !== '7') {
+        return
+      }
+
+      // Limit to exactly 9 digits
+      if (digits.length > 9) {
+        digits = digits.slice(0, 9)
+      }
+
+      setInputValue(digits)
+      return
+    }
+
+    // Currently in username / auto-detect mode
+    if (!val) {
+      setInputValue('')
+      return
+    }
+
+    const trimmed = val.trim()
+    const digitsOnly = trimmed.replace(/\D/g, '')
+
+    // If user starts typing a number or pastes phone number with 251 or +251
+    if (trimmed.startsWith('+251') || (trimmed.startsWith('251') && digitsOnly.length > 3)) {
+      let digits = digitsOnly.startsWith('251') ? digitsOnly.slice(3) : digitsOnly
+      if (digits.startsWith('0')) digits = digits.slice(1)
+      if (digits.length === 0 || digits[0] === '9' || digits[0] === '7') {
+        setIsPhoneMode(true)
+        setInputValue(digits.slice(0, 9))
+        return
+      }
+    } else if (/^\d/.test(trimmed)) {
+      // Starts with a digit: auto-switch to phone mode with 251 prefix
+      let digits = digitsOnly
+      if (digits.startsWith('0')) digits = digits.slice(1)
+
+      if (digits.length === 0) {
+        // User typed '0', switch to phone mode ready for 9 or 7
+        setIsPhoneMode(true)
+        setInputValue('')
+        return
+      }
+
+      if (digits[0] === '9' || digits[0] === '7') {
+        setIsPhoneMode(true)
+        setInputValue(digits.slice(0, 9))
+        return
+      } else {
+        // First digit is not 9 or 7
+        return
+      }
+    }
+
+    // User is typing a username
+    setInputValue(val)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const loginInput = username.trim()
-    if (!loginInput) { toast.error('Please enter your username or phone number'); return }
+    const loginInput = inputValue.trim()
+    if (!loginInput) {
+      const emptyMsg = isPhoneMode ? 'Please enter your phone number' : 'Please enter your username or phone number'
+      setError(emptyMsg)
+      toast?.error?.(emptyMsg)
+      return
+    }
+
+    if (isPhoneMode) {
+      if (loginInput.length !== 9 || (loginInput[0] !== '9' && loginInput[0] !== '7')) {
+        const phoneFormatMsg = 'Phone number must start with 9 or 7 and be exactly 9 digits'
+        setError(phoneFormatMsg)
+        toast?.error?.(phoneFormatMsg)
+        return
+      }
+    }
+
+    setError('')
     setLoading(true)
 
-    // Detect if input is phone number (numeric) or username (alphabetic/alphanumeric)
-    const hasLetters = /[a-zA-Z]/.test(loginInput)
-    const digitsOnly = loginInput.replace(/[\s\-().+]/g, '')
-    const isPhone = !hasLetters && digitsOnly.length >= 3 && /^\d+$/.test(digitsOnly)
+    // Formatted phone for phone mode (09xxxxxxxx)
+    const identifierToSend = isPhoneMode ? '0' + loginInput : loginInput
+    const isPhone = isPhoneMode || (!/[a-zA-Z]/.test(loginInput) && /^\d+$/.test(loginInput.replace(/\D/g, '')))
 
     const expectedAuthError = isPhone
       ? 'Invalid phone number or password'
       : 'Invalid username or password'
 
     try {
-      const admin = await authApi.login(loginInput, password)
+      const admin = await authApi.login(identifierToSend, password)
 
       // Strict case-sensitive check on username
       if (!isPhone && admin) {
@@ -114,7 +206,8 @@ function LoginForm({ onForgot }) {
 
         if (!matchesExactCase) {
           await authApi.logout().catch(() => {})
-          toast.error('Invalid username or password')
+          setError('Invalid username or password')
+          toast?.error?.('Invalid username or password')
           return
         }
       }
@@ -131,11 +224,9 @@ function LoginForm({ onForgot }) {
         /username/i.test(msg) ||
         /credentials/i.test(msg)
 
-      if (isAuthError) {
-        toast.error(expectedAuthError)
-      } else {
-        toast.error(msg || expectedAuthError)
-      }
+      const finalError = isAuthError ? expectedAuthError : (msg || expectedAuthError)
+      setError(finalError)
+      toast?.error?.(finalError)
     } finally {
       setLoading(false)
     }
@@ -148,16 +239,75 @@ function LoginForm({ onForgot }) {
         <p className="text-sm mt-1" style={{ color: '#7A6A8A' }}>Enter your credentials to access full control.</p>
       </div>
 
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">{error}</div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="login-username" className="block text-sm font-medium mb-1.5" style={{ color: '#3A2A4A' }}>Username or Phone</label>
-          <input
-            id="login-username"
-            type="text" value={username} onChange={e => setUsername(e.target.value)}
-            placeholder="Enter username or phone" required
-            className="w-full border rounded-lg px-4 py-2.5 text-sm outline-none"
-            style={{ borderColor: '#DDD0F0', color: DARK }}
-          />
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="login-username" className="block text-sm font-medium" style={{ color: '#3A2A4A' }}>
+              {isPhoneMode ? 'Phone Number' : 'Username or Phone'}
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                setIsPhoneMode(!isPhoneMode)
+                setInputValue('')
+                setError('')
+              }}
+              className="text-xs font-semibold hover:underline"
+              style={{ color: ACCENT }}
+            >
+              {isPhoneMode ? 'Use Username' : 'Use Phone (251)'}
+            </button>
+          </div>
+
+          <div
+            className="flex items-center border rounded-lg overflow-hidden transition-all focus-within:ring-2 focus-within:ring-purple-500/20"
+            style={{ borderColor: '#DDD0F0' }}
+          >
+            {isPhoneMode && (
+              <span
+                className="px-3 py-2.5 text-sm font-bold select-none flex items-center gap-1"
+                style={{ backgroundColor: '#F0EAF8', color: '#5B21B6', borderRight: '1px solid #DDD0F0' }}
+              >
+                <span>251</span>
+              </span>
+            )}
+            <input
+              id="login-username"
+              aria-label="Username or Phone"
+              type={isPhoneMode ? 'tel' : 'text'}
+              inputMode={isPhoneMode ? 'numeric' : 'text'}
+              value={inputValue}
+              onChange={handleInputChange}
+              placeholder={isPhoneMode ? '9xxxxxxxx or 7xxxxxxxx' : 'Enter username or phone'}
+              maxLength={isPhoneMode ? 9 : undefined}
+              required
+              className={`flex-1 px-4 py-2.5 text-sm outline-none bg-white ${isPhoneMode ? 'font-mono tracking-wider' : ''}`}
+              style={{ color: DARK }}
+            />
+            {inputValue && (
+              <button
+                type="button"
+                onClick={() => {
+                  setInputValue('')
+                  if (isPhoneMode) setIsPhoneMode(false)
+                }}
+                className="px-3 text-xs text-purple-400 hover:text-purple-700"
+                title="Clear"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {isPhoneMode && (
+            <p className="text-[11px] mt-1 text-purple-600 font-medium">
+              Must start with 9 or 7 ({inputValue.length}/9 digits)
+            </p>
+          )}
         </div>
 
         <div>
