@@ -140,7 +140,7 @@ function LoginForm({ onForgot }) {
           </div>
         </div>
 
-        {/* Forgot — super admins can also reset via phone */}
+        {/* Forgot — super admins reset via email */}
         <div className="text-right">
           <button type="button" onClick={onForgot} className="text-sm font-medium hover:underline" style={{ color: ACCENT }}>
             Forgot password?
@@ -160,15 +160,15 @@ function LoginForm({ onForgot }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Forgot password flow: phone → OTP → new password → done
+// Forgot password flow: email → OTP → new password → done
 // ═══════════════════════════════════════════════════════════════════════════
 function ForgotFlow({ onBack }) {
-  const [step, setStep]     = useState('phone')
+  const [step, setStep]     = useState('email')
   const [devOtp, setDevOtp] = useState(null)
-  const phone = usePhoneInput()
+  const [email, setEmail] = useState('')
 
-  const [phoneLoading, setPhoneLoading] = useState(false)
-  const [phoneError,   setPhoneError]   = useState('')
+  const [emailLoading, setEmailLoading] = useState(false)
+  const [emailError,   setEmailError]   = useState('')
 
   const [otp,         setOtp]       = useState('')
   const [newPass,     setNewPass]   = useState('')
@@ -178,18 +178,22 @@ function ForgotFlow({ onBack }) {
   const [otpLoading,  setOtpLoading] = useState(false)
   const [otpError,    setOtpError]  = useState('')
 
-  const submitPhone = async (e) => {
+  const submitEmail = async (e) => {
     e.preventDefault()
-    if (!phone.valid) { setPhoneError('Enter a valid 10-digit phone number starting with 09 or 07'); return }
-    setPhoneError(''); setPhoneLoading(true)
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setEmailError('Enter a valid email address')
+      return
+    }
+    setEmail(normalizedEmail); setEmailError(''); setEmailLoading(true)
     try {
-      const res = await api.post('/user-auth/forgot-password/check-phone', { phone: phone.full })
+      const res = await api.post('/super-auth/forgot-password/check-email', { email: normalizedEmail }, { refreshOnUnauthorized: false })
       setDevOtp(res?.data?.otp ?? null)
       setStep('otp')
     } catch (err) {
-      setPhoneError(err.message || 'Phone not found. Please check and try again.')
+      setEmailError(err.message || 'Email not found. Please check and try again.')
     } finally {
-      setPhoneLoading(false)
+      setEmailLoading(false)
     }
   }
 
@@ -200,7 +204,7 @@ function ForgotFlow({ onBack }) {
     if (newPass !== confirmPass) { setOtpError('Passwords do not match'); return }
     setOtpError(''); setOtpLoading(true)
     try {
-      await api.post('/user-auth/forgot-password/verify-otp', { phone: phone.full, otp, newPassword: newPass })
+      await api.post('/super-auth/forgot-password/verify-otp', { email, otp, newPassword: newPass }, { refreshOnUnauthorized: false })
       setStep('done')
     } catch (err) {
       setOtpError(err.message || 'Invalid or expired OTP.')
@@ -235,7 +239,7 @@ function ForgotFlow({ onBack }) {
       <div className="bg-white rounded-2xl shadow-lg p-8" style={{ border: '1px solid #DDD0F0' }}>
         <div className="mb-5">
           <h2 className="text-lg font-bold" style={{ color: DARK }}>Verification Code</h2>
-          <p className="text-sm mt-1" style={{ color: '#7A6A8A' }}>Code sent to {phone.full} — enter it below.</p>
+          <p className="text-sm mt-1" style={{ color: '#7A6A8A' }}>Code sent to {email} — enter it below.</p>
         </div>
 
         {devOtp && (
@@ -296,7 +300,7 @@ function ForgotFlow({ onBack }) {
           </button>
 
           <button type="button"
-            onClick={() => { setStep('phone'); setOtp(''); setNewPass(''); setConfirm(''); setOtpError('') }}
+            onClick={() => { setStep('email'); setOtp(''); setNewPass(''); setConfirm(''); setOtpError('') }}
             className="w-full text-sm font-medium py-2 hover:underline" style={{ color: ACCENT }}>
             ← Resend Code
           </button>
@@ -305,37 +309,32 @@ function ForgotFlow({ onBack }) {
     )
   }
 
-  // Phone step
+  // Email step
   return (
     <div className="bg-white rounded-2xl shadow-lg p-8" style={{ border: '1px solid #DDD0F0' }}>
       <div className="mb-6">
         <h2 className="text-xl font-bold" style={{ color: DARK }}>Forgot Password</h2>
-        <p className="text-sm mt-1" style={{ color: '#7A6A8A' }}>Enter your phone number to receive a verification code.</p>
+        <p className="text-sm mt-1" style={{ color: '#7A6A8A' }}>Enter your email to receive a verification code.</p>
       </div>
 
-      {phoneError && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">{phoneError}</div>
+      {emailError && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">{emailError}</div>
       )}
 
-      <form onSubmit={submitPhone} className="space-y-4">
+      <form onSubmit={submitEmail} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: '#3A2A4A' }}>Phone Number</label>
-          <div className="flex items-center border rounded-lg overflow-hidden" style={{ borderColor: '#DDD0F0' }}>
-            <span className="px-3 py-2.5 text-sm font-semibold select-none"
-              style={{ backgroundColor: ACCENT_BG, color: ACCENT, borderRight: `1px solid ${ACCENT_BORDER}` }}>0</span>
-            <input
-              type="tel" value={phone.raw} onChange={phone.onChange}
-              placeholder="9xxxxxxxx  or  7xxxxxxxx"
-              inputMode="numeric" maxLength={9} autoFocus
-              className="flex-1 px-3 py-2.5 text-sm outline-none bg-white" style={{ color: DARK }}
-            />
-          </div>
+          <label className="block text-sm font-medium mb-1.5" style={{ color: '#3A2A4A' }}>Email Address</label>
+          <input
+            type="email" value={email} onChange={e => setEmail(e.target.value)}
+            placeholder="admin@example.com" autoFocus required
+            className="w-full border rounded-lg px-4 py-2.5 text-sm outline-none bg-white" style={{ borderColor: '#DDD0F0', color: DARK }}
+          />
         </div>
 
-        <button type="submit" disabled={phoneLoading}
+        <button type="submit" disabled={emailLoading}
           className="w-full font-semibold py-2.5 rounded-lg transition-all disabled:opacity-60"
           style={{ backgroundColor: DARK, color: '#F0EAF8' }}>
-          {phoneLoading ? 'Checking…' : 'Send OTP'}
+          {emailLoading ? 'Checking…' : 'Send OTP'}
         </button>
 
         <button type="button" onClick={onBack}
