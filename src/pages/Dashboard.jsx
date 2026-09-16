@@ -277,74 +277,60 @@ export default function Dashboard() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-purple-50/40 text-purple-900/70 font-bold text-[11px] uppercase tracking-wider border-b border-purple-100">
+            <thead className="bg-purple-50/40 text-purple-900/60 font-semibold text-[11px] uppercase tracking-wider border-b border-purple-100">
               <tr>
-                <th className="px-6 py-3.5">Admin Profile</th>
-                <th className="px-6 py-3.5">Phone Identifier</th>
-                <th className="px-6 py-3.5 text-center">Business Owners</th>
-                <th className="px-6 py-3.5 text-center">Manufacturers</th>
-                <th className="px-6 py-3.5 text-center">Resellers</th>
-                <th className="px-6 py-3.5 text-center">Active Cashiers</th>
-                <th className="px-6 py-3.5 text-center">Cutters</th>
-                <th className="px-6 py-3.5 text-right">Account Status</th>
+                <th className="px-5 py-3">Admin</th>
+                <th className="px-5 py-3">Phone</th>
+                <th className="px-5 py-3 text-center">Owners</th>
+                <th className="px-5 py-3 text-center">Manufacturers</th>
+                <th className="px-5 py-3 text-center">Resellers</th>
+                <th className="px-5 py-3 text-center">Cashiers</th>
+                <th className="px-5 py-3 text-center">Cutters</th>
+                <th className="px-5 py-3 text-right">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-purple-100/60">
+            <tbody className="divide-y divide-purple-50">
               {loading ? (
                 <TableSkeletonRows count={5} columns={8} />
               ) : !stats?.adminsBreakdown || stats.adminsBreakdown.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-purple-400 font-medium">
+                  <td colSpan={8} className="text-center py-10 text-purple-300 text-sm font-medium">
                     No administrator records found.
                   </td>
                 </tr>
               ) : (
                 stats.adminsBreakdown.map((admin) => (
-                  <tr key={admin.id} className="hover:bg-purple-50/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-violet-100 text-violet-700 font-bold flex items-center justify-center text-xs shadow-xs">
+                  <tr key={admin.id} className="hover:bg-purple-50/20 transition-colors">
+                    {/* Admin name + avatar */}
+                    <td className="px-5 py-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-violet-100 text-violet-700 font-bold flex items-center justify-center text-xs flex-shrink-0">
                           {admin.name?.charAt(0)?.toUpperCase() || 'A'}
                         </div>
-                        <span className="font-bold text-[#120726]">{admin.name}</span>
+                        <span className="font-semibold text-[#120726] text-sm">{admin.name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-purple-900/70 font-mono text-xs">{admin.phone}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-violet-50 text-violet-700 border border-violet-200">
-                        {admin.owner_count} Owner{admin.owner_count !== 1 ? 's' : ''}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                        {admin.manufacturer_count}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                        {admin.reseller_count}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        {admin.cashier_count} Cashier{admin.cashier_count !== 1 ? 's' : ''}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                        {admin.cutter_count} Cutter{admin.cutter_count !== 1 ? 's' : ''}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
-                          admin.status === 'Active'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-rose-50 text-rose-700 border border-rose-200'
-                        }`}
-                      >
+                    {/* Phone */}
+                    <td className="px-5 py-2.5 font-mono text-xs text-purple-900/60">{admin.phone}</td>
+                    {/* Owners */}
+                    <td className="px-5 py-2.5 text-center font-semibold text-sm text-[#120726]">{admin.owner_count}</td>
+                    {/* Manufacturers */}
+                    <td className="px-5 py-2.5 text-center font-semibold text-sm text-[#120726]">{admin.manufacturer_count}</td>
+                    {/* Resellers */}
+                    <td className="px-5 py-2.5 text-center font-semibold text-sm text-[#120726]">{admin.reseller_count}</td>
+                    {/* Cashiers */}
+                    <td className="px-5 py-2.5 text-center font-semibold text-sm text-[#120726]">{admin.cashier_count}</td>
+                    {/* Cutters */}
+                    <td className="px-5 py-2.5 text-center font-semibold text-sm text-[#120726]">{admin.cutter_count}</td>
+                    {/* Status */}
+                    <td className="px-5 py-2.5 text-right">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                        admin.status === 'Active'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-rose-50 text-rose-700 border-rose-200'
+                      }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${admin.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                        <span>{admin.status}</span>
+                        {admin.status}
                       </span>
                     </td>
                   </tr>
@@ -371,61 +357,49 @@ export default function Dashboard() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-purple-50/40 text-purple-900/70 font-bold text-[11px] uppercase tracking-wider border-b border-purple-100">
+            <thead className="bg-purple-50/40 text-purple-900/60 font-semibold text-[11px] uppercase tracking-wider border-b border-purple-100">
               <tr>
-                <th className="px-6 py-3.5">Owner Profile</th>
-                <th className="px-6 py-3.5">Phone Identifier</th>
-                <th className="px-6 py-3.5">Business Role</th>
-                <th className="px-6 py-3.5 text-center">Assigned Cashiers</th>
-                <th className="px-6 py-3.5 text-center">Assigned Cutters</th>
-                <th className="px-6 py-3.5 text-right">Status</th>
+                <th className="px-5 py-3">Owner</th>
+                <th className="px-5 py-3">Phone</th>
+                <th className="px-5 py-3">Role</th>
+                <th className="px-5 py-3 text-center">Cashiers</th>
+                <th className="px-5 py-3 text-center">Cutters</th>
+                <th className="px-5 py-3 text-right">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-purple-100/60">
+            <tbody className="divide-y divide-purple-50">
               {loading ? (
                 <TableSkeletonRows count={5} columns={6} />
               ) : !stats?.ownersBreakdown || stats.ownersBreakdown.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-purple-400 font-medium">
+                  <td colSpan={6} className="text-center py-10 text-purple-300 text-sm font-medium">
                     No business owner records found.
                   </td>
                 </tr>
               ) : (
                 stats.ownersBreakdown.map((owner) => (
-                  <tr key={owner.id} className="hover:bg-purple-50/30 transition-colors">
-                    <td className="px-6 py-4 font-bold text-[#120726]">{owner.name}</td>
-                    <td className="px-6 py-4 text-purple-900/70 font-mono text-xs">{owner.phone}</td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                          owner.role === 'Manufacturer'
-                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                            : 'bg-blue-100 text-blue-800 border border-blue-200'
-                        }`}
-                      >
+                  <tr key={owner.id} className="hover:bg-purple-50/20 transition-colors">
+                    <td className="px-5 py-2.5 font-semibold text-sm text-[#120726]">{owner.name}</td>
+                    <td className="px-5 py-2.5 font-mono text-xs text-purple-900/60">{owner.phone}</td>
+                    <td className="px-5 py-2.5">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-bold border ${
+                        owner.role === 'Manufacturer'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-blue-50 text-blue-700 border-blue-200'
+                      }`}>
                         {owner.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        {owner.cashier_count} Cashier(s)
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                        {owner.cutter_count} Cutter(s)
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
-                          owner.status === 'Active'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-rose-50 text-rose-700 border border-rose-200'
-                        }`}
-                      >
+                    <td className="px-5 py-2.5 text-center font-semibold text-sm text-[#120726]">{owner.cashier_count}</td>
+                    <td className="px-5 py-2.5 text-center font-semibold text-sm text-[#120726]">{owner.cutter_count}</td>
+                    <td className="px-5 py-2.5 text-right">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                        owner.status === 'Active'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-rose-50 text-rose-700 border-rose-200'
+                      }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${owner.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                        <span>{owner.status}</span>
+                        {owner.status}
                       </span>
                     </td>
                   </tr>
