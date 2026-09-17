@@ -59,6 +59,39 @@ function AddCategoryModal({ groupId, groupName, onClose, onCreated }) {
   const [imageUrl, setImageUrl] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError]     = useState('')
+  const [imageName, setImageName] = useState('')
+  const fileInputRef = useRef(null)
+
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image file')
+      event.target.value = ''
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be 5 MB or smaller')
+      event.target.value = ''
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setImageUrl(String(reader.result || ''))
+      setImageName(file.name)
+      setError('')
+    }
+    reader.onerror = () => setError('Unable to read the selected image')
+    reader.readAsDataURL(file)
+  }
+
+  const removeImage = () => {
+    setImageUrl('')
+    setImageName('')
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   const handleSubmit = async () => {
     if (!name.trim()) { setError('Category name is required'); return }
@@ -110,24 +143,43 @@ function AddCategoryModal({ groupId, groupName, onClose, onCreated }) {
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
-              Image URL <span className="text-slate-400 font-normal">(optional)</span>
+              Category Image <span className="text-slate-400 font-normal">(optional)</span>
             </label>
             <input
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition-all text-slate-800"
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
             />
-            {imageUrl.trim() && (
-              <div className="mt-2">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-700 hover:bg-violet-100 transition-colors"
+              >
+                Choose from device
+              </button>
+              {imageName && <span className="min-w-0 truncate text-xs text-slate-500">{imageName}</span>}
+            </div>
+            {imageUrl && (
+              <div className="relative mt-3 h-28 w-28">
                 <img
                   src={imageUrl}
-                  alt="preview"
-                  className="h-20 w-20 object-cover rounded-xl border border-slate-200"
-                  onError={(e) => { e.target.style.display = 'none' }}
+                  alt="Category preview"
+                  className="h-28 w-28 object-cover rounded-xl border border-slate-200"
                 />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  aria-label="Remove selected image"
+                  className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs text-white shadow hover:bg-red-600 transition-colors"
+                >
+                  ×
+                </button>
               </div>
             )}
+            <p className="mt-1.5 text-[11px] text-slate-400">PNG, JPG, WEBP up to 5 MB</p>
           </div>
         </div>
 
