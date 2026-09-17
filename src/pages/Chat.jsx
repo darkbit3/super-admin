@@ -461,7 +461,9 @@ const ConversationPanel = memo(function ConversationPanel({
                   {!isMe && selectedGroup && (
                     <p className="mb-1 text-[10px] font-bold text-violet-700">{msg.senderName || 'Member'}</p>
                   )}
-                  <p className="leading-relaxed break-words text-sm">{msg.text}</p>
+                  {msg.imageUrl && <img src={msg.imageUrl} alt="Group post" className="mb-2 max-h-56 w-full rounded-xl object-cover" />}
+                  {msg.phoneNumber && <p className="mb-1 text-xs font-semibold">Phone: {msg.phoneNumber}</p>}
+                  {msg.text && <p className="leading-relaxed break-words text-sm">{msg.text}</p>}
                   <div className="mt-1.5 flex items-center justify-between gap-3 text-[10px] opacity-75">
                     <span>{msg.time}</span>
                     {isMe && <span className="font-bold">{msg.status === 'read' ? '✓✓' : '✓'}</span>}
@@ -476,7 +478,16 @@ const ConversationPanel = memo(function ConversationPanel({
 
       {/* Composer */}
       <div className="border-t border-purple-100 p-3.5 flex-shrink-0 bg-white">
+        {selectedGroup && imageData && <div className="mb-2 flex items-center gap-2 rounded-xl bg-violet-50 p-2">
+          <img src={imageData} alt="Selected group post" className="h-12 w-12 rounded-lg object-cover" />
+          <input value={phoneInput} onChange={(e) => setPhoneInput(e.target.value)} placeholder="Phone number (optional)" className="flex-1 rounded-lg border border-violet-100 bg-white px-2 py-1.5 text-xs outline-none" />
+          <button type="button" onClick={() => { setImageData(null); setPhoneInput(''); setShowPhoneField(false) }} className="text-xs text-red-600">Remove</button>
+        </div>}
         <div className="flex items-center gap-2 rounded-2xl px-3 py-2 border border-purple-100 bg-slate-50/70 focus-within:bg-white focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 transition-all">
+          {selectedGroup && <>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImagePick} />
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-violet-600 hover:bg-violet-100" aria-label="Add group image">+</button>
+          </>}
           <textarea
             ref={inputRef}
             rows={1}
@@ -486,7 +497,7 @@ const ConversationPanel = memo(function ConversationPanel({
             placeholder={selectedGroup ? `Message ${selectedGroup.name}…` : `Message ${selectedPerson?.name || 'user'}…`}
             className="flex-1 bg-transparent text-xs sm:text-sm outline-none resize-none leading-relaxed text-slate-800 max-h-24"
           />
-          <button type="button" onClick={handleSend} disabled={!draft.trim() || sending}
+          <button type="button" onClick={handleSend} disabled={(!draft.trim() && !imageData) || sending}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white shadow-sm disabled:opacity-40 transition-all flex-shrink-0 active:scale-95"
             style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)' }}>
             {sending ? <Spinner size="sm" className="border-white/30 border-t-white" /> : (
@@ -673,6 +684,7 @@ export default function Chat() {
         id: m.id, sender: m.isMine ? 'me' : 'them',
         text: m.message, time: formatTime(m.createdAt),
         senderName: m.senderRole === 'super_admin' ? 'Super Admin' : m.senderRole,
+        imageUrl: m.imageUrl || null, phoneNumber: m.phoneNumber || null,
         status: m.status || 'sent',
       }))
       setGroupMessages(msgs)
@@ -758,12 +770,12 @@ export default function Chat() {
     }
   }, [selectedPerson, sending, loadMessages])
 
-  const sendGroupMessage = useCallback(async (text) => {
-    if (!selectedGroupId || !text || sending) return
+  const sendGroupMessage = useCallback(async (text, imageUrl = null, phoneNumber = null) => {
+    if (!selectedGroupId || (!text && !imageUrl) || sending) return
     setSending(true)
-    setGroupMessages((prev) => [...prev, { id: `tmp-${Date.now()}`, sender: 'me', text, time: formatTime(new Date().toISOString()), senderName: 'Super Admin' }])
+    setGroupMessages((prev) => [...prev, { id: `tmp-${Date.now()}`, sender: 'me', text, imageUrl, phoneNumber, time: formatTime(new Date().toISOString()), senderName: 'Super Admin' }])
     try {
-      await api.post(`/chat/groups/${selectedGroupId}/send`, { message: text })
+      await api.post(`/chat/groups/${selectedGroupId}/send`, { message: text, image_url: imageUrl, phone_number: phoneNumber })
       await loadGroupMessages(selectedGroupId)
     } catch (err) {
       console.error('Failed to send group message', err)
