@@ -49,7 +49,7 @@ const cardDefs = [
   {
     key: 'totalOwners',
     label: 'Total Owners',
-    subtext: 'Mfrs & Resellers',
+    subtext: 'Garment and Boutique / Textile and Accessory',
     color: 'from-blue-500/15 to-indigo-500/5',
     borderColor: 'border-blue-200/60',
     iconColor: 'bg-blue-600 text-white',
