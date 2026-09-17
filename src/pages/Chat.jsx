@@ -6,10 +6,11 @@ import { ListSkeleton, MessageSkeleton, Spinner } from '../components/Loaders'
 const palette = ['#7C3AED', '#6366F1', '#10B981', '#0EA5E9', '#F59E0B', '#EC4899', '#8B5CF6']
 
 const GROUP_COLORS = {
-  'group-cherk':    '#7C3AED',
-  'group-general':  '#10B981',
-  'group-business': '#0EA5E9',
-  'group-support':  '#F59E0B',
+  'group-cherk':            '#7C3AED',
+  'group-general':          '#10B981',
+  'group-business':         '#0EA5E9',
+  'group-support':          '#F59E0B',
+  'group-boutique-garment': '#EC4899',
 }
 
 function formatTime(value) {
@@ -45,9 +46,10 @@ function RoleBadge({ role }) {
     Cutter:       'bg-purple-50 text-purple-700 border-purple-200/80',
   }
   const cls = roleMap[role] || 'bg-slate-100 text-slate-700 border-slate-200'
+  const displayRole = role === 'Manufacturer' ? 'Garment and Boutique' : role === 'Reseller' ? 'Textile and Accessory' : role
   return (
     <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cls}`}>
-      {role}
+      {displayRole}
     </span>
   )
 }
@@ -339,9 +341,13 @@ const ConversationPanel = memo(function ConversationPanel({
   messagesEndRef,
 }) {
   const [draft, setDraft] = useState('')
+  const [imageData, setImageData] = useState(null)   // base64 data URL
+  const [phoneInput, setPhoneInput] = useState('')
+  const [showPhoneField, setShowPhoneField] = useState(false)
+  const fileInputRef = useRef(null)
   const inputRef = useRef(null)
 
-  useEffect(() => { setDraft('') }, [selectedPerson?.id, selectedGroup?.id])
+  useEffect(() => { setDraft(''); setImageData(null); setPhoneInput(''); setShowPhoneField(false) }, [selectedPerson?.id, selectedGroup?.id])
   useEffect(() => { if (!sending) inputRef.current?.focus() }, [sending])
 
   const activeMessages    = selectedGroup ? groupMessages : messages
@@ -349,12 +355,27 @@ const ConversationPanel = memo(function ConversationPanel({
   const activeThreadColor = selectedGroup ? (GROUP_COLORS[selectedGroup.id] || '#7C3AED') : palette[0]
   const isLoading         = selectedGroup ? loadingGroupMessages : loadingMessages
 
+  const handleImagePick = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      setImageData(ev.target.result)
+      setShowPhoneField(true)
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
   const handleSend = () => {
     const text = draft.trim()
-    if (!text || sending) return
+    if ((!text && !imageData) || sending) return
     setDraft('')
-    if (selectedGroup) onSendGroup(text)
+    if (selectedGroup) onSendGroup(text, imageData, phoneInput.trim() || null)
     else onSend(text)
+    setImageData(null)
+    setPhoneInput('')
+    setShowPhoneField(false)
   }
 
   if (!selectedPerson && !selectedGroup) {
@@ -808,7 +829,7 @@ export default function Chat() {
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Portal Chat</h1>
           </div>
           <p className="text-sm text-slate-500 mt-1">
-            4 fixed groups — all members auto-included. Manage categories per group.
+            5 fixed groups — all members auto-included. Manage categories per group.
           </p>
         </div>
       </div>

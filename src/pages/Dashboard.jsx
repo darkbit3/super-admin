@@ -282,8 +282,8 @@ export default function Dashboard() {
                 <th className="px-5 py-3">Admin</th>
                 <th className="px-5 py-3">Phone</th>
                 <th className="px-5 py-3 text-center">Owners</th>
-                <th className="px-5 py-3 text-center">Manufacturers</th>
-                <th className="px-5 py-3 text-center">Resellers</th>
+                <th className="px-5 py-3 text-center">Garment and Boutique</th>
+                <th className="px-5 py-3 text-center">Textile and Accessory</th>
                 <th className="px-5 py-3 text-center">Cashiers</th>
                 <th className="px-5 py-3 text-center">Cutters</th>
                 <th className="px-5 py-3 text-right">Status</th>
