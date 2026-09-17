@@ -37,6 +37,12 @@ const IconLogout = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
   </svg>
 )
+const IconSettings = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317a1.724 1.724 0 013.35 0 1.724 1.724 0 002.573 1.066 1.724 1.724 0 012.367 2.367 1.724 1.724 0 001.066 2.573 1.724 1.724 0 010 3.35 1.724 1.724 0 00-1.066 2.573 1.724 1.724 0 01-2.367 2.367 1.724 1.724 0 00-2.573 1.066 1.724 1.724 0 01-3.35 0 1.724 1.724 0 00-2.573-1.066 1.724 1.724 0 01-2.367-2.367 1.724 1.724 0 00-1.066-2.573 1.724 1.724 0 010-3.35 1.724 1.724 0 001.066-2.573 1.724 1.724 0 012.367-2.367 1.724 1.724 0 002.573-1.066z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+)
 
 const navItems = [
   { label: 'Dashboard',     path: ROUTES.DASHBOARD,              icon: <IconDashboard /> },
@@ -45,6 +51,7 @@ const navItems = [
   { label: 'Approvals',     path: ROUTES.REGISTRATION_APPROVALS, icon: <IconApprovals /> },
   { label: 'Chat',          path: ROUTES.CHAT,                    icon: <IconChat /> },
   { label: 'History',       path: ROUTES.HISTORY,                 icon: <IconHistory /> },
+  { label: 'Settings',      path: ROUTES.SETTINGS,                icon: <IconSettings /> },
 ]
 
 function SidebarContent({ onNavClick, onLogout }) {

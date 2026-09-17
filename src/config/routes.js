@@ -11,4 +11,5 @@ export const ROUTES = {
   REGISTRATION_APPROVALS: '/cmVnaXN0cmF0aW9uLWFwcHJvdmFscw==',
   CHAT:                   '/Y2hhdA==',
   HISTORY:                '/aGlzdG9yeQ==',
+  SETTINGS:               '/c2V0dGluZ3M=',
 }

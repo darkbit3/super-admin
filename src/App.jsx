@@ -8,6 +8,7 @@ import RegisterFee from './pages/RegisterFee'
 import RegistrationApprovals from './pages/RegistrationApprovals'
 import Chat from './pages/Chat'
 import History from './pages/History'
+import Settings from './pages/Settings'
 import RouteProgress from './components/RouteProgress'
 
 export default function App() {
@@ -64,6 +65,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <History />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.SETTINGS}
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />
